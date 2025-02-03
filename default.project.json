@@ -5,15 +5,18 @@
 
 		"ReplicatedStorage": {
 			"$ignoreUnknownInstances": true,
-			"Node": {
-				"$path": "src/node"
+			"Libraries": {
+				"$path": "src/libs"
 			}
 		},
 
 		"StarterPlayer": {
 			"StarterPlayerScripts": {
 				"$ignoreUnknownInstances": true,
-				"$path": "src/client"
+				
+				"Tests": {
+					"$path": "src/client"
+				}
 			}
 		}
 	}
