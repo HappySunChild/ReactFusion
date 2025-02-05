@@ -27,6 +27,7 @@ local Symbols = {
 	Function = named('Function'),
 	Fragment = named('Fragment'),
 	Hydration = named('Hydration'),
+	Stateful = named('Stateful'),
 	
 	State = named('State')
 }

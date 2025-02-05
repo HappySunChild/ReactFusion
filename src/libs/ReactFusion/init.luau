@@ -8,6 +8,8 @@ return {
 	
 	Event = require(script.Event),
 	
+	Component = require(script.Component),
+	
 	createComputed = require(script.State.createComputed),
 	createValue = require(script.State.createValue),
 	peek = require(script.State.peek),
@@ -17,6 +19,8 @@ return {
 	createElement = require(script.createElement),
 	
 	mount = Renderer.mount,
-	unmount = Renderer.unmountNode,
+	unmount = Renderer.unmount,
+	update = Renderer.updateNode,
+	reconcile = Renderer.reconcile,
 	hydrate = Renderer.hydrate
 }

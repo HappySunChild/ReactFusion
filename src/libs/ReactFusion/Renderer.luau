@@ -13,10 +13,10 @@ local Redirect = Symbols.Redirect
 local Ref = Symbols.Ref
 
 
-local renderer = {}
+local Renderer = {}
 
 
-local function applyRef(ref, hostInstance: Instance)
+local function applyRef(ref, hostInstance: Instance?)
 	if not ref then
 		return
 	end
@@ -28,7 +28,7 @@ local function applyRef(ref, hostInstance: Instance)
 	end
 end
 
-local function createVirtualNode(element, hostParent: Instance, hostKey: string?)
+local function createVirtualNode(element, hostParent: Instance, hostKey: string?): Types.VirtualNode
 	local virtualNode = {
 		[Symbols.Type] = Types.VirtualNode,
 		
@@ -40,13 +40,26 @@ local function createVirtualNode(element, hostParent: Instance, hostKey: string?
 		children = {},
 		
 		bindings = {},
-		connections = {}
+		connections = {},
+		
+		wasUnmounted = false
 	}
 	
 	return virtualNode
 end
 
 
+local function getElementByKey(elementOrElements, key)
+	if Types.of(elementOrElements) == Types.Element then
+		if key == Symbols.UseParentKey then
+			return elementOrElements
+		end
+		
+		return nil
+	end
+	
+	return elementOrElements[key]
+end
 
 local function iterateElements(elementOrElements)
 	if Types.of(elementOrElements) == Types.Element then
@@ -67,35 +80,74 @@ local function iterateElements(elementOrElements)
 end
 
 
+function Renderer.replaceNode(virtualNode: Types.VirtualNode, newElement: Types.Element)
+	local hostParent = virtualNode.hostParent
+	local hostKey = virtualNode.hostKey
+	
+	Renderer.unmount(virtualNode)
+	
+	local newNode = Renderer.mount(newElement, hostParent, hostKey)
+	
+	return newNode
+end
 
-function renderer.updateNode(virtualNode, newElement: Types.Element)
+function Renderer.updateNode(virtualNode: Types.VirtualNode, newElement: Types.Element)
 	local currentElement = virtualNode.currentElement
 	
-	if currentElement == newElement then
-		return virtualNode
-	end
-	
 	if not newElement then
-		renderer.unmountNode(virtualNode)
+		Renderer.unmount(virtualNode)
 		
 		return
+	end
+	
+	if currentElement.component ~= newElement.component then
+		return Renderer.replaceNode(virtualNode, newElement)
 	end
 	
 	if virtualNode.hostInstance then
 		applyProperties(virtualNode, currentElement.props, newElement.props)
 	end
+	
+	local children = newElement.props[Children]
+	if children then
+		Renderer.updateNodeChildren(virtualNode, virtualNode.hostInstance, children)
+	end
+	
+	virtualNode.currentElement = newElement
+	
+	return virtualNode
 end
 
-function renderer.updateNodeChildren(virtualNode, hostParent: Instance, newChildren: {Types.Element}|Types.Element)
+function Renderer.updateNodeChildren(virtualNode: Types.VirtualNode, hostParent: Instance, newChildren: {Types.Element}|Types.Element)
+	local remove = {}
+	
+	for childKey, childNode in virtualNode.children do
+		local newElement = getElementByKey(newChildren, childKey)
+		local newNode = Renderer.updateNode(childNode, newElement)
+		
+		if newNode then
+			virtualNode.children[childKey] = newNode
+		else
+			remove[childKey] = true
+		end
+	end
+	
+	for childKey in remove do
+		virtualNode.children[childKey] = nil
+	end
+	
 	for childKey, childElement in iterateElements(newChildren) do
 		local useKey = childKey
 		
 		if childKey == Symbols.UseParentKey then
 			useKey = virtualNode.hostKey
-			childKey = 1
 		end
 		
-		local childNode = renderer.mount(childElement, hostParent, useKey)
+		if virtualNode.children[childKey] then
+			continue
+		end
+		
+		local childNode = Renderer.mount(childElement, hostParent, useKey)
 		
 		if childNode then
 			virtualNode.children[childKey] = childNode
@@ -105,7 +157,7 @@ end
 
 
 
-function renderer.hydrateNode(virtualNode, hostInstance: Instance)
+function Renderer.hydrateNode(virtualNode: Types.VirtualNode, hostInstance: Instance)
 	local element = virtualNode.currentElement
 	local props = element.props
 	
@@ -133,13 +185,13 @@ function renderer.hydrateNode(virtualNode, hostInstance: Instance)
 	local children = props[Children]
 	
 	if children then
-		renderer.updateNodeChildren(virtualNode, hostInstance, children)
+		Renderer.updateNodeChildren(virtualNode, hostInstance, children)
 	end
 	
 	applyRef(props[Ref], hostInstance)
 end
 
-function renderer.renderHostNode(hostNode, hostParent: Instance)
+function Renderer.renderHostNode(hostNode: Types.VirtualNode, hostParent: Instance)
 	local hostElement = hostNode.currentElement
 	
 	local className = hostElement.component
@@ -168,7 +220,7 @@ function renderer.renderHostNode(hostNode, hostParent: Instance)
 	local children = props[Children]
 	
 	if children then
-		renderer.updateNodeChildren(hostNode, hostInstance, children)
+		Renderer.updateNodeChildren(hostNode, hostInstance, children)
 	end
 	
 	
@@ -181,7 +233,7 @@ end
 
 
 
-function renderer.mount(element, hostParent: Instance?, key: string?)
+function Renderer.mount(element: Types.Element, hostParent: Instance, key: string?): Types.VirtualNode
 	if key == nil then
 		key = 'NodeTree'
 	end
@@ -198,15 +250,17 @@ function renderer.mount(element, hostParent: Instance?, key: string?)
 	local virtualNode = createVirtualNode(element, hostParent, key)
 	
 	if kind == Symbols.Host then
-		renderer.renderHostNode(virtualNode, hostParent)
+		Renderer.renderHostNode(virtualNode, hostParent)
 	elseif kind == Symbols.Hydration then
-		renderer.hydrateNode(virtualNode, component)
+		Renderer.hydrateNode(virtualNode, component)
 	elseif kind == Symbols.Function then
 		local result = component(props, props[Children])
 		
-		renderer.updateNodeChildren(virtualNode, hostParent, result)
+		Renderer.updateNodeChildren(virtualNode, hostParent, result)
 	elseif kind == Symbols.Fragment then
-		renderer.updateNodeChildren(virtualNode, hostParent, element.elements)
+		Renderer.updateNodeChildren(virtualNode, hostParent, element.elements)
+	elseif kind == Symbols.Stateful then
+		print('stateful component', component)
 	else
 		error(`Invalid element component, {typeof(component)} '{component}'`, 2)
 	end
@@ -214,12 +268,18 @@ function renderer.mount(element, hostParent: Instance?, key: string?)
 	return virtualNode
 end
 
-function renderer.unmountNode(virtualNode)
-	for _, childNode in virtualNode.children do
-		renderer.unmountNode(childNode)
+function Renderer.unmount(virtualNode: Types.VirtualNode)
+	if virtualNode.wasUnmounted then
+		return
 	end
 	
-	local element = virtualNode.element
+	virtualNode.wasUnmounted = true
+	
+	for _, childNode in virtualNode.children do
+		Renderer.unmount(childNode)
+	end
+	
+	local element = virtualNode.currentElement
 	
 	if element then
 		applyRef(element.props[Ref], nil)
@@ -238,10 +298,14 @@ function renderer.unmountNode(virtualNode)
 	end
 end
 
-function renderer.hydrate(target: Instance, props: Types.ElementProps, children: {Types.Element}?)
+function Renderer.hydrate(target: Instance, props: Types.ElementProps, children: {Types.Element}?)
 	local element = createElement(target, props, children)
 	
-	return renderer.mount(element)
+	return Renderer.mount(element, target.Parent)
 end
 
-return renderer
+function Renderer.reconcile(virtualNode: Types.VirtualNode)
+	Renderer.updateNode(virtualNode, virtualNode.currentElement)
+end
+
+return Renderer
