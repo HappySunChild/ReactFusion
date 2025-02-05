@@ -1,3 +1,4 @@
+--!strict
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
 
@@ -20,10 +21,11 @@ local function hoverEnd(label: TextLabel)
 end
 
 
-local function simpleLabel(props, children)
-	local text = Node.createBinding(props.text)
+
+local function simpleButton(props, children)
+	local text = Node.createValue(props.text)
 	
-	return Node.createElement('TextLabel', {
+	return Node.createElement('TextButton', {
 		BackgroundColor3 = Color3.fromRGB(27, 27, 27),
 		BorderColor3 = Color3.new(1, 0, 1),
 		TextColor3 = Color3.new(1, 1, 1),
@@ -43,6 +45,10 @@ local function simpleLabel(props, children)
 				if props.hoverText then
 					text:set(props.hoverText)
 				end
+			elseif input.UserInputType == Enum.UserInputType.MouseButton1 then
+				if props.callback then
+					props.callback()
+				end
 			end
 		end,
 		[Node.Event.InputEnded] = function(rbx, input: InputObject)
@@ -58,30 +64,29 @@ local function simpleLabel(props, children)
 end
 
 
-
+local containerSizeX = Node.createValue(50)
 
 
 local labels = {}
 
-
-for i = 1, 10 do
-	labels[i] = Node.createElement(simpleLabel, {
-		position = UDim2.fromOffset(0, 19 * (i - 1)),
+for i = 1, 16 do
+	labels[i] = Node.createElement(simpleButton, {
+		position = UDim2.fromOffset(0, 18 * (i - 1)),
 		text = 'Label',
-		hoverText = i
+		hoverText = i,
+		
+		callback = function()
+			containerSizeX:set(i * 10)
+		end
 	})
 end
 
 
 local container = Node.createElement('Frame', {
-	Size = UDim2.fromOffset(100, 300),
-	
-	[Node.Event.MouseEnter] = function(rbx: Frame)
-		rbx.BackgroundColor3 = Color3.new(math.random(), math.random(), math.random())
-	end
-}, {
-	Node.createFragment(labels)
-})
+	Size = containerSizeX:map(function(xSize)
+		return UDim2.fromOffset(xSize, 300)
+	end),
+}, labels)
 
 
 
@@ -89,8 +94,29 @@ local container = Node.createElement('Frame', {
 local gui = Node.createElement('ScreenGui', {
 	ResetOnSpawn = false
 }, {
-	container
+	CoolFrame = container
 })
 
-
 Node.mount(gui, playerGui)
+
+-- hydration example
+Node.hydrate(workspace:FindFirstChild('HydrationLabel', true), {
+	Text = Node.createComputed(function(use)
+		local x = use(containerSizeX)
+		
+		return 'Hello, I am a hydrated element!\n' .. x
+	end),
+	
+	AnchorPoint = Vector2.new(0.5, 0.5),
+	Position = UDim2.fromScale(0.5, 0.5),
+	Size = UDim2.fromScale(0.5, 0.5),
+	
+	[Node.Event.MouseEnter] = function(label)
+		hoverStart(label)
+	end,
+	[Node.Event.MouseLeave] = function(label)
+		hoverEnd(label)
+	end
+}, {
+	Frame = Node.createElement('Frame')
+})

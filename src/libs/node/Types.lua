@@ -1,3 +1,38 @@
+--!strict
+export type ElementProps = {[string|any]: any}
+export type ElementComponent = string | (props: ElementProps, children: {Element}) -> Element
+
+export type Element = {
+	component: ElementComponent,
+	props: ElementProps
+}
+
+export type StateObject<V> = {
+	onChange: (StateObject<V>, callback: (new: V, old: V) -> nil) -> () -> nil
+}
+
+export type Use = <V>(target: StateObject<V>) -> V 
+export type ComputedProcessor<T> = (Use) -> T
+export type Computed<V, T> = StateObject<T> & {
+	_using: {StateObject<any>},
+	_processor: ComputedProcessor<T>
+}
+
+export type Value<V> = StateObject<V> & {
+	set: (Value<V>, newValue: V) -> V,
+	update: (Value<V>, predicate: (V) -> V) -> V,
+	map: <T>(Value<V>, processor: (V) -> T) -> Computed<T, T>
+}
+
+export type Ref = {
+	set: (Ref, instance: Instance) -> nil,
+	get: (Ref) -> Instance?
+}
+
+export type Fragment = {
+	elements: {Element}
+}
+
 local Symbols = require(script.Parent.Symbols)
 
 local function createType(name)
@@ -10,15 +45,16 @@ local function createType(name)
 	return newType
 end
 
-local Types = {}
-Types.Type = Symbols.Type
+local Types = {
+	Event = createType('Event'),
+	Ref = createType('Ref'),
+	Fragment = createType('Fragment'),
+	Element = createType('Element'),
+	VirtualNode = createType('VirtualNode'),
 
-Types.Binding = createType('Binding')
-Types.Event = createType('Event')
-Types.Ref = createType('Ref')
-Types.Fragment = createType('Fragment')
-Types.Element = createType('Element')
-Types.Node = createType('Node')
+	Value = createType('Value'),
+	Computed = createType('Computed')
+}
 
 function Types.of(value)
 	local vType = type(value)
@@ -32,16 +68,16 @@ function Types.of(value)
 	return vType
 end
 
-function Types.kind(element)
-	local compType = type(element.component)
+function Types.kindOf(value)
+	local vType = type(value)
 	
-	if compType == 'string' then
-		return Symbols.Host
-	elseif compType == 'function' then
-		return Symbols.Function
-	elseif Types.of(element) == Types.Fragment then
-		return Symbols.Fragment
+	if vType == 'table' then
+		if value[Symbols.Kind] then
+			return value[Symbols.Kind]
+		end
 	end
+	
+	return vType
 end
 
 return Types

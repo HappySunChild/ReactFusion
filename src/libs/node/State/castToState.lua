@@ -1,7 +1,8 @@
 local Symbols = require(script.Parent.Parent.Symbols)
+local Types = require(script.Parent.Parent.Types)
 
 local function castToState(target)
-	if type(target) == 'table' and target[Symbols.Kind] == Symbols.State then
+	if Types.kindOf(target) == Symbols.State then
 		return target
 	end
 	

@@ -1,4 +1,4 @@
-local function symbol(name)
+local function named(name)
 	local newSymbol = newproxy(true)
 	
 	getmetatable(newSymbol).__tostring = function()
@@ -9,14 +9,26 @@ local function symbol(name)
 end
 
 local Symbols = {
-	Children = symbol('Children'),
-	Signal = symbol('Signal'),
-	Type = symbol('Type'),
-	Ref = symbol('Ref'),
+	named = named,
 	
-	Host = symbol('Host'),
-	Function = symbol('Function'),
-	Fragment = symbol('Fragment')
+	Type = named('Type'),
+	Kind = named('Kind'),
+	
+	Secret = named('Secret'),
+	Children = named('Children'),
+	Signal = named('Signal'),
+	Ref = named('Ref'),
+	Redirect = named('Redirect'),
+	
+	UseParentKey = named('UseParentKey'),
+	
+	-- kinds
+	Host = named('Host'),
+	Function = named('Function'),
+	Fragment = named('Fragment'),
+	Hydration = named('Hydration'),
+	
+	State = named('State')
 }
 
 return Symbols

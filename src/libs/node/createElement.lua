@@ -1,8 +1,13 @@
 local Symbols = require(script.Parent.Symbols)
 local Types = require(script.Parent.Types)
+
+type element = Types.Element
+type component = Types.ElementComponent
+type props = Types.ElementProps
+
 local Children = Symbols.Children
 
-local function createElement(component, props, children)
+local function createElement(component: component, props: props, children: {element}?): element
 	if props == nil then
 		props = {}
 	end
@@ -12,7 +17,7 @@ local function createElement(component, props, children)
 	end
 	
 	local newElement = {
-		[Types.Type] = Types.Element,
+		[Symbols.Type] = Types.Element,
 		
 		component = component,
 		props = props

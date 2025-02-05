@@ -1,7 +1,9 @@
-local Symbols = require(script.Parent.Parent.Symbols)
-local Types = require(script.Parent.Parent.Types)
+local package = script.Parent.Parent
 
-local createSignal = require(script.Parent.Parent.createSignal)
+local Symbols = require(package.Symbols)
+local Types = require(package.Types)
+
+local createSignal = require(package.createSignal)
 local castToState = require(script.Parent.castToState)
 local evaluate = require(script.Parent.evaluate)
 local peek = require(script.Parent.peek)
@@ -13,12 +15,12 @@ local class = {
 
 local METATABLE = table.freeze({__index = class})
 
-local function Computed(predicate)
+local function createComputed<V, T>(processor: Types.ComputedProcessor<T>): Types.Computed<V, T>
 	local newComputed = setmetatable({
 		[Symbols.Signal] = createSignal(),
-		[Symbols.HiddenValue] = nil,
+		[Symbols.Secret] = nil,
 		_using = {},
-		_predicate = predicate
+		_processor = processor
 	}, METATABLE)
 	
 	evaluate(newComputed, true)
@@ -41,14 +43,14 @@ function class:_evaluate()
 		return peek(target)
 	end
 	
-	local newValue = self._predicate(use)
-	local oldValue = self[Symbols.HiddenValue]
+	local newValue = self._processor(use)
+	local oldValue = self[Symbols.Secret]
 	
-	self[Symbols.HiddenValue] = newValue
+	self[Symbols.Secret] = newValue
 	
 	if oldValue ~= newValue then
 		self[Symbols.Signal]:fire(newValue, oldValue)
 	end
 end
 
-return Computed
+return createComputed

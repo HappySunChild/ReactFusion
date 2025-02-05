@@ -1,8 +1,10 @@
 local Types = require(script.Parent.Types)
+local Symbols = require(script.Parent.Symbols)
 
-local function createFragment(elements)
+local function createFragment(elements: {Types.Element}): Types.Fragment
 	local newFragment = {
-		[Types.Type] = Types.Fragment,
+		[Symbols.Type] = Types.Fragment,
+		
 		elements = elements
 	}
 	
