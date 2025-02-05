@@ -7,7 +7,7 @@ local player = Players.LocalPlayer
 local playerGui = player.PlayerGui
 
 
-local Node = require(ReplicatedStorage.Libraries.node)
+local Rusion = require(ReplicatedStorage.Libraries.ReactFusion)
 
 
 local function hoverStart(label: TextLabel)
@@ -23,9 +23,9 @@ end
 
 
 local function simpleButton(props, children)
-	local text = Node.createValue(props.text)
+	local text = Rusion.createValue(props.text)
 	
-	return Node.createElement('TextButton', {
+	return Rusion.createElement('TextButton', {
 		BackgroundColor3 = Color3.fromRGB(27, 27, 27),
 		BorderColor3 = Color3.new(1, 0, 1),
 		TextColor3 = Color3.new(1, 1, 1),
@@ -38,7 +38,7 @@ local function simpleButton(props, children)
 		TextXAlignment = Enum.TextXAlignment.Left,
 		TextScaled = true,
 		
-		[Node.Event.InputBegan] = function(rbx, input: InputObject)
+		[Rusion.Event.InputBegan] = function(rbx, input: InputObject)
 			if input.UserInputType == Enum.UserInputType.MouseMovement then
 				hoverStart(rbx)
 				
@@ -51,7 +51,7 @@ local function simpleButton(props, children)
 				end
 			end
 		end,
-		[Node.Event.InputEnded] = function(rbx, input: InputObject)
+		[Rusion.Event.InputEnded] = function(rbx, input: InputObject)
 			if input.UserInputType == Enum.UserInputType.MouseMovement then
 				hoverEnd(rbx)
 				
@@ -64,13 +64,13 @@ local function simpleButton(props, children)
 end
 
 
-local containerSizeX = Node.createValue(50)
+local containerSizeX = Rusion.createValue(50)
 
 
 local labels = {}
 
 for i = 1, 16 do
-	labels[i] = Node.createElement(simpleButton, {
+	labels[i] = Rusion.createElement(simpleButton, {
 		position = UDim2.fromOffset(0, 18 * (i - 1)),
 		text = 'Label',
 		hoverText = i,
@@ -82,7 +82,7 @@ for i = 1, 16 do
 end
 
 
-local container = Node.createElement('Frame', {
+local container = Rusion.createElement('Frame', {
 	Size = containerSizeX:map(function(xSize)
 		return UDim2.fromOffset(xSize, 300)
 	end),
@@ -91,17 +91,17 @@ local container = Node.createElement('Frame', {
 
 
 
-local gui = Node.createElement('ScreenGui', {
+local gui = Rusion.createElement('ScreenGui', {
 	ResetOnSpawn = false
 }, {
 	CoolFrame = container
 })
 
-Node.mount(gui, playerGui)
+Rusion.mount(gui, playerGui)
 
 -- hydration example
-Node.hydrate(workspace:FindFirstChild('HydrationLabel', true), {
-	Text = Node.createComputed(function(use)
+Rusion.hydrate(workspace:FindFirstChild('HydrationLabel', true), {
+	Text = Rusion.createComputed(function(use)
 		local x = use(containerSizeX)
 		
 		return 'Hello, I am a hydrated element!\n' .. x
@@ -111,12 +111,12 @@ Node.hydrate(workspace:FindFirstChild('HydrationLabel', true), {
 	Position = UDim2.fromScale(0.5, 0.5),
 	Size = UDim2.fromScale(0.5, 0.5),
 	
-	[Node.Event.MouseEnter] = function(label)
+	[Rusion.Event.MouseEnter] = function(label)
 		hoverStart(label)
 	end,
-	[Node.Event.MouseLeave] = function(label)
+	[Rusion.Event.MouseLeave] = function(label)
 		hoverEnd(label)
 	end
 }, {
-	Frame = Node.createElement('Frame')
+	Frame = Rusion.createElement('Frame')
 })
