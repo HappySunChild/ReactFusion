@@ -15,7 +15,7 @@ export type Value<V> = StateObject<V> & {
 	update: (Value<V>, predicate: (V) -> V) -> V,
 	map: <T>(Value<V>, processor: (V) -> T) -> Computed<T, T>,
 	
-	tween: (Value<V>, target: any, info: TweenInfo) -> nil,
+	tween: (Value<V>, target: V, info: TweenInfo) -> () -> nil,
 }
 
 export type ElementProps = {any}
