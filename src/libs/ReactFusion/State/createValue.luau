@@ -15,7 +15,7 @@ local METATABLE = table.freeze({__index = ValueClass})
 
 local function createValue<V>(initialValue: V): Types.Value<V>
 	local newValue = setmetatable({
-		[Symbols.Secret] = initialValue,
+		[Symbols.Internal] = initialValue,
 		[Symbols.Signal] = createSignal()
 	}, METATABLE)
 	
@@ -28,9 +28,9 @@ end
 
 function ValueClass:set(newValue)
 	local signal = self[Symbols.Signal]
-	local oldValue = self[Symbols.Secret]
+	local oldValue = self[Symbols.Internal]
 	
-	self[Symbols.Secret] = newValue
+	self[Symbols.Internal] = newValue
 	
 	signal:fire(newValue, oldValue)
 	
@@ -38,7 +38,7 @@ function ValueClass:set(newValue)
 end
 
 function ValueClass:update(predicate)
-	local currentValue = self[Symbols.Secret]
+	local currentValue = self[Symbols.Internal]
 	
 	return self:set(predicate(currentValue))
 end

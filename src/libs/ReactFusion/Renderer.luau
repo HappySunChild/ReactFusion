@@ -7,7 +7,11 @@ local createElement = require(package.createElement)
 local getElementKind = require(package.getElementKind)
 local defaultProperties = require(package.Instance.defaultProperties)
 local applyProperties = require(package.Instance.applyProperties)
+local assign = require(package.assign)
 
+local ComponentLifecyclePhase = require(package.ComponentLifecyclePhase)
+
+local Internal = Symbols.Internal
 local Children = Symbols.Children
 local Redirect = Symbols.Redirect
 local Ref = Symbols.Ref
@@ -28,7 +32,7 @@ local function applyRef(ref, hostInstance: Instance?)
 	end
 end
 
-local function createVirtualNode(element, hostParent: Instance, hostKey: string?): Types.VirtualNode
+local function createVirtualNode(element, hostParent: Instance?, hostKey: string?): Types.VirtualNode
 	local virtualNode = {
 		[Symbols.Type] = Types.VirtualNode,
 		
@@ -105,7 +109,7 @@ function Renderer.updateNode(virtualNode: Types.VirtualNode, newElement: Types.E
 	end
 	
 	if virtualNode.hostInstance then
-		applyProperties(virtualNode, currentElement.props, newElement.props)
+		applyProperties(virtualNode, newElement.props, currentElement.props)
 	end
 	
 	local children = newElement.props[Children]
@@ -118,7 +122,7 @@ function Renderer.updateNode(virtualNode: Types.VirtualNode, newElement: Types.E
 	return virtualNode
 end
 
-function Renderer.updateNodeChildren(virtualNode: Types.VirtualNode, hostParent: Instance, newChildren: {Types.Element}|Types.Element)
+function Renderer.updateNodeChildren(virtualNode: Types.VirtualNode, hostParent: Instance?, newChildren: {Types.Element}|Types.Element)
 	local remove = {}
 	
 	for childKey, childNode in virtualNode.children do
@@ -157,12 +161,14 @@ end
 
 
 
-function Renderer.hydrateNode(virtualNode: Types.VirtualNode, hostInstance: Instance)
+local function mountHydrateNode(virtualNode: Types.VirtualNode)
 	local element = virtualNode.currentElement
 	local props = element.props
 	
 	assert(props.Name == nil, 'Name can not be passed as a property!')
 	assert(props.Parent == nil, 'Parent can not be passed as a property!')
+	
+	local hostInstance = element.component
 	
 	-- im still not entirely sure about this behavior,
 	-- i think they should act like redirects.
@@ -191,8 +197,8 @@ function Renderer.hydrateNode(virtualNode: Types.VirtualNode, hostInstance: Inst
 	applyRef(props[Ref], hostInstance)
 end
 
-function Renderer.renderHostNode(hostNode: Types.VirtualNode, hostParent: Instance)
-	local hostElement = hostNode.currentElement
+local function mountHostNode(virtualNode: Types.VirtualNode)
+	local hostElement = virtualNode.currentElement
 	
 	local className = hostElement.component
 	local props = hostElement.props
@@ -204,7 +210,7 @@ function Renderer.renderHostNode(hostNode: Types.VirtualNode, hostParent: Instan
 	
 	
 	local hostInstance = Instance.new(className)
-	hostNode.hostInstance = hostInstance
+	virtualNode.hostInstance = hostInstance
 	
 	local default = defaultProperties[className]
 	
@@ -214,26 +220,60 @@ function Renderer.renderHostNode(hostNode: Types.VirtualNode, hostParent: Instan
 		end
 	end
 	
-	applyProperties(hostNode, props)
+	applyProperties(virtualNode, props)
 	
 	
 	local children = props[Children]
 	
 	if children then
-		Renderer.updateNodeChildren(hostNode, hostInstance, children)
+		Renderer.updateNodeChildren(virtualNode, hostInstance, children)
 	end
 	
 	
-	hostInstance.Name = tostring(hostNode.hostKey)
-	hostInstance.Parent = hostParent
+	hostInstance.Name = tostring(virtualNode.hostKey)
+	hostInstance.Parent = virtualNode.hostParent
 	
 	
 	applyRef(props[Ref], hostInstance)
 end
 
+local function mountStatefulNode(virtualNode: Types.VirtualNode)
+	local currentElement = virtualNode.currentElement
+	
+	local internal = {
+		virtualNode = virtualNode,
+		lifecyclePhase = ComponentLifecyclePhase.Init
+	}
+	
+	local instance = setmetatable({
+		[Internal] = internal,
+		
+		props = assign({}, currentElement.props),
+		state = {}
+	}, currentElement.component) :: Types.StatefulComponent
+	
+	virtualNode.componentInstance = instance
+	
+	if instance.init then
+		instance:init(instance.props)
+	end
+	
+	internal.lifecyclePhase = ComponentLifecyclePhase.Render
+	
+	local renderResult = instance:render()
+	Renderer.updateNodeChildren(virtualNode, virtualNode.hostParent, renderResult)
+	
+	if instance.didMount then
+		internal.lifecyclePhase = ComponentLifecyclePhase.DidMount
+		instance:didMount()
+	end
+	
+	internal.lifecyclePhase = ComponentLifecyclePhase.Idle
+end
 
 
-function Renderer.mount(element: Types.Element, hostParent: Instance, key: string?): Types.VirtualNode
+
+function Renderer.mount(element: Types.Element, hostParent: Instance?, key: string?): Types.VirtualNode
 	if key == nil then
 		key = 'NodeTree'
 	end
@@ -250,9 +290,9 @@ function Renderer.mount(element: Types.Element, hostParent: Instance, key: strin
 	local virtualNode = createVirtualNode(element, hostParent, key)
 	
 	if kind == Symbols.Host then
-		Renderer.renderHostNode(virtualNode, hostParent)
+		mountHostNode(virtualNode)
 	elseif kind == Symbols.Hydration then
-		Renderer.hydrateNode(virtualNode, component)
+		mountHydrateNode(virtualNode)
 	elseif kind == Symbols.Function then
 		local result = component(props, props[Children])
 		
@@ -260,7 +300,7 @@ function Renderer.mount(element: Types.Element, hostParent: Instance, key: strin
 	elseif kind == Symbols.Fragment then
 		Renderer.updateNodeChildren(virtualNode, hostParent, element.elements)
 	elseif kind == Symbols.Stateful then
-		print('stateful component', component)
+		mountStatefulNode(virtualNode)
 	else
 		error(`Invalid element component, {typeof(component)} '{component}'`, 2)
 	end
@@ -275,18 +315,23 @@ function Renderer.unmount(virtualNode: Types.VirtualNode)
 	
 	virtualNode.wasUnmounted = true
 	
+	local currentElement = virtualNode.currentElement
+	local hostInstance = virtualNode.hostInstance
+	local componentInstance = virtualNode.componentInstance
+	
+	if componentInstance and componentInstance.willUnmount then
+		componentInstance[Internal].lifecyclePhase = ComponentLifecyclePhase.WillUnmount
+		componentInstance:willUnmount()
+	end
+	
 	for _, childNode in virtualNode.children do
 		Renderer.unmount(childNode)
 	end
 	
-	local element = virtualNode.currentElement
+	applyRef(currentElement.props[Ref], nil)
 	
-	if element then
-		applyRef(element.props[Ref], nil)
-	end
-	
-	if virtualNode.hostInstance then
-		virtualNode.hostInstance:Destroy()
+	if hostInstance then
+		hostInstance:Destroy()
 	end
 	
 	for _, disconnect in virtualNode.bindings do
@@ -301,7 +346,7 @@ end
 function Renderer.hydrate(target: Instance, props: Types.ElementProps, children: {Types.Element}?)
 	local element = createElement(target, props, children)
 	
-	return Renderer.mount(element, target.Parent)
+	return Renderer.mount(element)
 end
 
 function Renderer.reconcile(virtualNode: Types.VirtualNode)

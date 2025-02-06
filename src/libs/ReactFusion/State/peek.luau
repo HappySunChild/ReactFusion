@@ -1,5 +1,3 @@
---!strict
-
 local Symbols = require(script.Parent.Parent.Symbols)
 local Types = require(script.Parent.Parent.Types)
 
@@ -10,7 +8,7 @@ local function peek<T>(target: Types.StateObject<T> | T): T
 	if castToState(target) then
 		evaluate(target)
 		
-		return target[Symbols.Secret] :: T
+		return target[Symbols.Internal] :: T
 	end
 	
 	return target :: T

@@ -7,7 +7,7 @@ type props = Types.ElementProps
 
 local Children = Symbols.Children
 
-local function createElement(component: component, props: props, children: {element}?): element
+local function createElement(component: component, props: props?, children: {element}?): element
 	if props == nil then
 		props = {}
 	end

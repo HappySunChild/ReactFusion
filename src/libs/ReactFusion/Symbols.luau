@@ -14,7 +14,8 @@ local Symbols = {
 	Type = named('Type'),
 	Kind = named('Kind'),
 	
-	Secret = named('Secret'),
+	Internal = named('Internal'),
+	
 	Children = named('Children'),
 	Signal = named('Signal'),
 	Ref = named('Ref'),

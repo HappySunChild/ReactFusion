@@ -1,22 +1,23 @@
---!strict
-
 export type StateObject<V> = {
 	onChange: (StateObject<V>, callback: (new: V, old: V) -> nil) -> () -> nil
 }
+
 export type Use = <V>(target: StateObject<V>) -> V 
 export type ComputedProcessor<T> = (Use) -> T
+
 export type Computed<V, T> = StateObject<T> & {
 	_using: {StateObject<any>},
 	_processor: ComputedProcessor<T>
 }
+
 export type Value<V> = StateObject<V> & {
 	set: (Value<V>, newValue: V) -> V,
 	update: (Value<V>, predicate: (V) -> V) -> V,
 	map: <T>(Value<V>, processor: (V) -> T) -> Computed<T, T>
 }
 
-export type ElementProps = {[string|any]: any}
-export type ElementComponent = Instance | string | (props: ElementProps, children: {Element}) -> Element
+export type ElementProps = {any}
+export type ElementComponent = StatefulComponent | Instance | string | (props: ElementProps, children: {Element}) -> Element
 
 export type Element = {
 	component: ElementComponent,
@@ -27,15 +28,19 @@ export type Ref = {
 	set: (Ref, instance: Instance) -> nil,
 	get: (Ref) -> Instance?
 }
+
 export type Fragment = {
 	elements: {Element}
 }
+
 export type VirtualNode = {
 	currentElement: Element,
 	
 	hostInstance: Instance?,
 	hostParent: Instance?,
 	hostKey: string?,
+	
+	componentInstance: StatefulComponent?,
 	
 	children: {VirtualNode},
 	bindings: {[string]: () -> nil},
@@ -44,6 +49,19 @@ export type VirtualNode = {
 	wasUnmounted: boolean
 }
 
+export type StatefulComponent = {
+	props: ElementProps,
+	state: {any},
+	
+	setState: (StatefulComponent, newState: any) -> nil,
+	
+	render: (StatefulComponent) -> Element,
+	init: (StatefulComponent, initProps: ElementProps) -> nil,
+	
+	didUpdate: (StatefulComponent) -> nil,
+	didMount: (StatefulComponent) -> nil,
+	willUnmount: (StatefulComponent) -> nil
+}
 
 local Symbols = require(script.Parent.Symbols)
 

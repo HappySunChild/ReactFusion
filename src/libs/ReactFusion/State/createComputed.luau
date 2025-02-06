@@ -18,7 +18,7 @@ local METATABLE = table.freeze({__index = class})
 local function createComputed<V, T>(processor: Types.ComputedProcessor<T>): Types.Computed<V, T>
 	local newComputed = setmetatable({
 		[Symbols.Signal] = createSignal(),
-		[Symbols.Secret] = nil,
+		[Symbols.Internal] = nil,
 		_using = {},
 		_processor = processor
 	}, METATABLE)
@@ -44,9 +44,9 @@ function class:_evaluate()
 	end
 	
 	local newValue = self._processor(use)
-	local oldValue = self[Symbols.Secret]
+	local oldValue = self[Symbols.Internal]
 	
-	self[Symbols.Secret] = newValue
+	self[Symbols.Internal] = newValue
 	
 	if oldValue ~= newValue then
 		self[Symbols.Signal]:fire(newValue, oldValue)

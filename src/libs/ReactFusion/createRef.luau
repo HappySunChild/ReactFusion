@@ -10,18 +10,18 @@ local METATABLE = table.freeze({__index = RefClass})
 local function createRef(): Types.Ref
 	local ref = setmetatable({
 		[Symbols.Type] = Types.Ref,
-		[Symbols.Secret] = nil
+		[Symbols.Internal] = nil
 	}, METATABLE)
 
 	return ref
 end
 
 function RefClass:set(instance)
-	self[Symbols.Secret] = instance
+	self[Symbols.Internal] = instance
 end
 
 function RefClass:get()
-	return self[Symbols.Secret]
+	return self[Symbols.Internal]
 end
 
 return createRef
