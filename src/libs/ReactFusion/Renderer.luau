@@ -90,9 +90,7 @@ function Renderer.replaceNode(virtualNode: Types.VirtualNode, newElement: Types.
 	
 	Renderer.unmount(virtualNode)
 	
-	local newNode = Renderer.mount(newElement, hostParent, hostKey)
-	
-	return newNode
+	return Renderer.mount(newElement, hostParent, hostKey)
 end
 
 function Renderer.updateNode(virtualNode: Types.VirtualNode, newElement: Types.Element)
@@ -113,6 +111,7 @@ function Renderer.updateNode(virtualNode: Types.VirtualNode, newElement: Types.E
 	end
 	
 	local children = newElement.props[Children]
+	
 	if children then
 		Renderer.updateNodeChildren(virtualNode, virtualNode.hostInstance, children)
 	end
@@ -250,7 +249,7 @@ local function mountStatefulNode(virtualNode: Types.VirtualNode)
 		
 		props = assign({}, currentElement.props),
 		state = {}
-	}, currentElement.component) :: Types.StatefulComponent
+	}, currentElement.component)
 	
 	virtualNode.componentInstance = instance
 	
@@ -349,8 +348,8 @@ function Renderer.hydrate(target: Instance, props: Types.ElementProps, children:
 	return Renderer.mount(element)
 end
 
-function Renderer.reconcile(virtualNode: Types.VirtualNode)
-	Renderer.updateNode(virtualNode, virtualNode.currentElement)
+function Renderer.reconcile(virtualNode: Types.VirtualNode, newElement: Types.Element?)
+	Renderer.updateNode(virtualNode, newElement or virtualNode.currentElement)
 end
 
 return Renderer

@@ -7,46 +7,22 @@ local player = Players.LocalPlayer
 
 local Rusion = require(ReplicatedStorage.Libraries.ReactFusion)
 
-
-local testComponent = Rusion.createComponent('TestComponent')
-
-function testComponent:init()
-	task.spawn(function()
-		task.wait(4)
-		
-		self:setState({evil = true})
-	end)
-end
-
-function testComponent:render()
-	local state = self.state
-	
-	local children = {}
-	local backgroundColor = Color3.new(1, 1, 1)
-	
-	if state.evil then
-		backgroundColor = Color3.new(1, 0, 0)
-		
-		children.Label = Rusion.createElement('TextLabel', {
-			Size = UDim2.fromScale(1, 1),
-			BackgroundTransparency = 1,
-			Text = 'EVIL!!'
-		})
-	end
-	
-	return Rusion.createElement('Frame', {
-		Size = UDim2.fromOffset(100, 100),
-		BackgroundColor3 = backgroundColor,
-		
-		[Rusion.Event.MouseLeave] = function()
-			self:setState({evil = false})
-		end,
-		[Rusion.Event.MouseEnter] = function()
-			self:setState({evil = true})
-		end
-	}, children)
-end
+local frameSizeX = Rusion.createValue(0)
+local background = Rusion.createValue(player.TeamColor.Color)
 
 Rusion.mount(Rusion.createElement('ScreenGui', nil, {
-	Component = Rusion.createElement(testComponent)
+	Frame = Rusion.createElement('Frame', {
+		BackgroundColor3 = background,
+		Size = frameSizeX:map(function(v)
+			return UDim2.fromOffset(v, 100)
+		end)
+	})
 }), player.PlayerGui)
+
+frameSizeX:tween(100, TweenInfo.new(1, Enum.EasingStyle.Back, Enum.EasingDirection.Out))
+
+player:GetPropertyChangedSignal('TeamColor'):Connect(function()
+	local newColor = player.TeamColor.Color
+	
+	background:tween(newColor, TweenInfo.new(3, Enum.EasingStyle.Cubic, Enum.EasingDirection.InOut))
+end)
