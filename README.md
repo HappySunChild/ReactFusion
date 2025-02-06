@@ -1,9 +1,6 @@
 # ReactFusion/Rusion
-A UI framework that is a sort of melding of Fusion and Roact. <br/>
+Basically just a fork of [Roact](https://github.com/Roblox/roact) that has a bunch of [Fusion](https://github.com/dphfox/Fusion) features spliced into it. <br/>
 *(This is not meant to be used for production, its more of a project to help me understand Fusion)*
 
-Roact: https://github.com/Roblox/roact <br/>
-Fusion: https://github.com/dphfox/Fusion <br/>
-
 ## Contributions
-All contributions are welcome.
+All contributions are welcome!
