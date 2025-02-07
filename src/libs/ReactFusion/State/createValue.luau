@@ -1,10 +1,8 @@
-local HttpService = game:GetService("HttpService")
-local RunService = game:GetService("RunService")
-
 local package = script.Parent.Parent
 
 local Symbols = require(package.Symbols)
 local Types = require(package.Types)
+local External = require(package.External)
 
 local Tween = Symbols.named('Tween')
 local Signal = Symbols.Signal
@@ -63,33 +61,30 @@ function ValueClass:map(callback)
 end
 
 
-function ValueClass:tween(targetValue: any, info: TweenInfo)
+function ValueClass:tween(targetValue: any, info: TweenInfo, completedCallback: () -> nil)
 	if self[Tween] then
 		self[Tween]()
 	end
 	
 	local duration = getTweenDuration(info)
-	local id = 'ReactFusionTween-' .. HttpService:GenerateGUID(false)
-	
-	local function cancel()
-		pcall(function()
-			RunService:UnbindFromRenderStep(id)
-		end)
-	end
 	
 	local startValue = self[Internal]
 	local startTime = os.clock()
 	
-	RunService:BindToRenderStep(id, Enum.RenderPriority.First.Value, function()
-		local elapsed = os.clock() - startTime
+	local cancel = External.bind(function(now, disconnect)
+		local elapsed = now - startTime
 		local alpha = getTweenAlpha(info, elapsed)
 		
 		local newValue = lerp(startValue, targetValue, alpha)
 		
 		self:set(newValue)
 		
-		if elapsed > duration then
-			cancel()
+		if elapsed >= duration then
+			disconnect()
+			
+			if completedCallback then
+				completedCallback()
+			end
 		end
 	end)
 	
