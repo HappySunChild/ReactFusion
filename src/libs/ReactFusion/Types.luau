@@ -15,7 +15,7 @@ export type Value<V> = StateObject<V> & {
 	update: (Value<V>, predicate: (V) -> V) -> V,
 	map: <T>(Value<V>, processor: (V) -> T) -> Computed<T, T>,
 	
-	tween: (Value<V>, target: V, info: TweenInfo) -> () -> nil,
+	tween: (Value<V>, target: V, info: TweenInfo, completedCallback: () -> nil?) -> () -> nil,
 }
 
 export type ElementProps = {any}
@@ -65,8 +65,10 @@ export type StatefulComponent = {
 	willUnmount: (StatefulComponent) -> nil
 }
 
-local Symbols = require(script.Parent.Symbols)
 
+
+
+local Symbols = require(script.Parent.Symbols)
 
 local function createType(name)
 	local newType = newproxy(true)

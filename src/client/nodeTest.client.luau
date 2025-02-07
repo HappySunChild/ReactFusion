@@ -19,10 +19,12 @@ Rusion.mount(Rusion.createElement('ScreenGui', nil, {
 	})
 }), player.PlayerGui)
 
-frameSizeX:tween(100, TweenInfo.new(1, Enum.EasingStyle.Back, Enum.EasingDirection.Out))
-
-player:GetPropertyChangedSignal('TeamColor'):Connect(function()
+player:GetPropertyChangedSignal('Team'):Connect(function()
 	local newColor = player.TeamColor.Color
 	
-	background:tween(newColor, TweenInfo.new(3, Enum.EasingStyle.Cubic, Enum.EasingDirection.InOut))
+	background:tween(newColor, TweenInfo.new(4, Enum.EasingStyle.Cubic, Enum.EasingDirection.InOut))
 end)
+
+task.wait(4)
+
+frameSizeX:tween(500, TweenInfo.new(4, Enum.EasingStyle.Cubic, Enum.EasingDirection.InOut))
