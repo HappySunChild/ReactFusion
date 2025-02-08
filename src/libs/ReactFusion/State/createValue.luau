@@ -33,6 +33,26 @@ local function createValue<V>(initialValue: V): Types.Value<V>
 end
 
 
+function ValueClass:bindToInstanceProperty(instance: Instance, property: string)
+	local success = pcall(function()
+		return instance[property]
+	end)
+	
+	if not success then
+		error(`'{property}' is not a valid property of instance '{instance}'`, 2)
+	end
+	
+	self:set(instance[property])
+	
+	local connection = instance:GetPropertyChangedSignal(property):Connect(function()
+		self:set(instance[property])
+	end)
+	
+	return function ()
+		connection:Disconnect()
+	end, connection
+end
+
 function ValueClass:onChange(callback)
 	return self[Signal]:connect(callback)
 end
