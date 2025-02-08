@@ -1,4 +1,4 @@
-local package = script.Parent
+local package = script.Parent.Parent
 
 local Symbols = require(package.Symbols)
 local Types = require(package.Types)
