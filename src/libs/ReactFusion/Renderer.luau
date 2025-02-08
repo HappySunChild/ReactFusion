@@ -300,7 +300,7 @@ function Renderer.mount(element: Types.Element, hostParent: Instance?, key: stri
 	elseif kind == Symbols.Stateful then
 		mountStatefulNode(virtualNode)
 	else
-		error(`Invalid element component, {typeof(component)} '{component}'`, 2)
+		error(`Invalid element component, {typeof(component)} '{component}' Kind {kind}`, 2)
 	end
 	
 	return virtualNode
