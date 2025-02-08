@@ -27,6 +27,7 @@ local defaultProps = {
 		BorderColor3 = Color3.new(0, 0, 0),
 		BorderSizePixel = 0,
 		
+		Font = Enum.Font.SourceSans,
 		Text = '',
 		TextSize = 14,
 		TextColor3 = Color3.new(0, 0, 0)
@@ -38,6 +39,7 @@ local defaultProps = {
 		
 		ClearTextOnFocus = false,
 		
+		Font = Enum.Font.SourceSans,
 		Text = '',
 		TextSize = 14,
 		TextColor3 = Color3.new(0, 0, 0)
@@ -49,6 +51,7 @@ local defaultProps = {
 		
 		AutoButtonColor = false,
 		
+		Font = Enum.Font.SourceSans,
 		Text = '',
 		TextSize = 14,
 		TextColor3 = Color3.new(0, 0, 0)
