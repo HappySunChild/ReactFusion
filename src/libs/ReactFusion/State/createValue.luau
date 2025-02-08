@@ -14,6 +14,8 @@ local lerp = require(package.Animation.lerp)
 
 local createSignal = require(package.createSignal)
 local createComputed = require(script.Parent.createComputed)
+local isSimilar = require(package.Utility.isSimilar)
+
 
 local ValueClass = {
 	[Symbols.Kind] = Symbols.State,
@@ -33,26 +35,6 @@ local function createValue<V>(initialValue: V): Types.Value<V>
 end
 
 
-function ValueClass:bindToInstanceProperty(instance: Instance, property: string)
-	local success = pcall(function()
-		return instance[property]
-	end)
-	
-	if not success then
-		error(`'{property}' is not a valid property of instance '{instance}'`, 2)
-	end
-	
-	self:set(instance[property])
-	
-	local connection = instance:GetPropertyChangedSignal(property):Connect(function()
-		self:set(instance[property])
-	end)
-	
-	return function ()
-		connection:Disconnect()
-	end, connection
-end
-
 function ValueClass:onChange(callback)
 	return self[Signal]:connect(callback)
 end
@@ -63,8 +45,8 @@ function ValueClass:set(newValue: any)
 	
 	self[Internal] = newValue
 	
-	if oldValue ~= newValue then
-	signal:fire(newValue, oldValue)
+	if not isSimilar(newValue, oldValue) then
+		signal:fire(newValue, oldValue)
 	end
 	
 	return newValue
@@ -75,13 +57,6 @@ function ValueClass:update(predicate)
 	
 	return self:set(predicate(currentValue))
 end
-
-function ValueClass:map(callback)
-	return createComputed(function(use)
-		return callback(use(self))
-	end)
-end
-
 
 function ValueClass:tween(targetValue: any, info: TweenInfo, completedCallback: () -> nil)
 	if self[Tween] then
@@ -114,5 +89,34 @@ function ValueClass:tween(targetValue: any, info: TweenInfo, completedCallback: 
 	
 	return cancel
 end
+
+
+function ValueClass:map(callback)
+	return createComputed(function(use)
+		return callback(use(self))
+	end)
+end
+
+function ValueClass:bindToInstanceProperty(instance: Instance, property: string)
+	local success = pcall(function()
+		return instance[property]
+	end)
+	
+	if not success then
+		error(`'{property}' is not a valid property of instance '{instance}'`, 2)
+	end
+	
+	self:set(instance[property])
+	
+	local connection = instance:GetPropertyChangedSignal(property):Connect(function()
+		self:set(instance[property])
+	end)
+	
+	return function ()
+		connection:Disconnect()
+	end, connection
+end
+
+table.freeze(ValueClass)
 
 return createValue

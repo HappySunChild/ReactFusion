@@ -3,17 +3,18 @@ local package = script.Parent.Parent
 local Symbols = require(package.Symbols)
 local Types = require(package.Types)
 
+local isSimilar = require(package.Utility.isSimilar)
 local createSignal = require(package.createSignal)
 local castToState = require(script.Parent.castToState)
 local evaluate = require(script.Parent.evaluate)
 local peek = require(script.Parent.peek)
 
-local class = {
+local ComputedClass = {
 	[Symbols.Kind] = Symbols.State,
 	[Symbols.Type] = Types.Computed,
 }
 
-local METATABLE = table.freeze({__index = class})
+local METATABLE = table.freeze({__index = ComputedClass})
 
 local function createComputed<V, T>(processor: Types.ComputedProcessor<T>): Types.Computed<V, T>
 	local newComputed = setmetatable({
@@ -28,11 +29,11 @@ local function createComputed<V, T>(processor: Types.ComputedProcessor<T>): Type
 	return newComputed
 end
 
-function class:onChange(callback)
+function ComputedClass:onChange(callback)
 	return self[Symbols.Signal]:connect(callback)
 end
 
-function class:_evaluate()
+function ComputedClass:_evaluate()
 	local function use(target)
 		if castToState(target) and not self._using[target] then
 			self._using[target] = target:onChange(function()
@@ -48,9 +49,11 @@ function class:_evaluate()
 	
 	self[Symbols.Internal] = newValue
 	
-	if oldValue ~= newValue then
+	if not isSimilar(newValue, oldValue) then
 		self[Symbols.Signal]:fire(newValue, oldValue)
 	end
 end
+
+table.freeze(ComputedClass)
 
 return createComputed
