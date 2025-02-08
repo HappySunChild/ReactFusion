@@ -13,10 +13,10 @@ return {
 	createValue = require(script.State.createValue),
 	peek = require(script.State.peek),
 	
-	createRef = require(script.createRef),
-	createFragment = require(script.createFragment),
-	createElement = require(script.createElement),
-	createComponent = require(script.createComponent),
+	createRef = require(script.Graph.createRef),
+	createFragment = require(script.Graph.createFragment),
+	createElement = require(script.Graph.createElement),
+	createComponent = require(script.Graph.createComponent),
 	
 	mount = Renderer.mount,
 	unmount = Renderer.unmount,

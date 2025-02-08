@@ -1,5 +1,7 @@
-local Types = require(script.Parent.Types)
-local Symbols = require(script.Parent.Symbols)
+local package = script.Parent.Parent
+
+local Types = require(package.Types)
+local Symbols = require(package.Symbols)
 
 local function createFragment(elements: {Types.Element}): Types.Fragment
 	local newFragment = table.freeze({

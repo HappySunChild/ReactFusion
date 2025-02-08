@@ -1,10 +1,10 @@
-local package = script.Parent
+local package = script.Parent.Parent
 
 local Symbols = require(package.Symbols)
 local Types = require(package.Types)
 local Renderer = require(package.Renderer)
 
-local ComponentLifecyclePhase = require(package.ComponentLifecyclePhase)
+local ComponentLifecyclePhase = require(script.Parent.ComponentLifecyclePhase)
 
 local Name = Symbols.named('Name')
 local Internal = Symbols.Internal

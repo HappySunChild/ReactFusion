@@ -1,5 +1,7 @@
-local Types = require(script.Parent.Types)
-local Symbols = require(script.Parent.Symbols)
+local package = script.Parent.Parent
+
+local Types = require(package.Types)
+local Symbols = require(package.Symbols)
 
 local RefClass = {
 	[Symbols.Type] = Types.Ref

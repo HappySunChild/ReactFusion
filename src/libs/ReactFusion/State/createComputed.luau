@@ -4,7 +4,7 @@ local Symbols = require(package.Symbols)
 local Types = require(package.Types)
 
 local isSimilar = require(package.Utility.isSimilar)
-local createSignal = require(package.createSignal)
+local createSignal = require(package.Graph.createSignal)
 local castToState = require(script.Parent.castToState)
 local evaluate = require(script.Parent.evaluate)
 local peek = require(script.Parent.peek)

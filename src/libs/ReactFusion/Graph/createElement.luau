@@ -1,5 +1,7 @@
-local Symbols = require(script.Parent.Symbols)
-local Types = require(script.Parent.Types)
+local package = script.Parent.Parent
+
+local Symbols = require(package.Symbols)
+local Types = require(package.Types)
 
 local Children = Symbols.Children
 

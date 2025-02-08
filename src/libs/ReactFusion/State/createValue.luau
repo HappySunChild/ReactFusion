@@ -12,7 +12,7 @@ local getTweenDuration = require(package.Animation.getTweenDuration)
 local getTweenAlpha = require(package.Animation.getTweenAlpha)
 local lerp = require(package.Animation.lerp)
 
-local createSignal = require(package.createSignal)
+local createSignal = require(package.Graph.createSignal)
 local createComputed = require(script.Parent.createComputed)
 local isSimilar = require(package.Utility.isSimilar)
 

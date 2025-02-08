@@ -3,13 +3,13 @@ local package = script.Parent
 local Symbols = require(package.Symbols)
 local Types = require(package.Types)
 
-local createElement = require(package.createElement)
+local createElement = require(package.Graph.createElement)
 local getElementKind = require(package.Utility.getElementKind)
 local defaultProperties = require(package.Instance.defaultProperties)
 local applyProperties = require(package.Instance.applyProperties)
 local assign = require(package.Utility.assign)
 
-local ComponentLifecyclePhase = require(package.ComponentLifecyclePhase)
+local ComponentLifecyclePhase = require(package.Graph.ComponentLifecyclePhase)
 
 local Internal = Symbols.Internal
 local Children = Symbols.Children
