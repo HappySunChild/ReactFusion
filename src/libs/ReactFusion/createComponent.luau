@@ -55,4 +55,6 @@ function ComponentClass:render()
 	error(`Component "{self[Name]}" is missing the 'render' method.`)
 end
 
+table.freeze(ComponentClass)
+
 return createComponent

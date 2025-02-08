@@ -3,10 +3,10 @@ local Types = require(script.Parent.Types)
 
 return setmetatable({}, {
 	__index = function(self, name)
-		local event = {
+		local event = table.freeze({
 			[Symbols.Type] = Types.Event,
 			name = name
-		}
+		})
 		
 		self[name] = event
 		
