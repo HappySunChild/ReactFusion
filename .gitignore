@@ -1,8 +1,1 @@
-# Project place file
-/Testing Place.rbxlx
-
-# Roblox Studio lock files
-/*.rbxlx.lock
-/*.rbxl.lock
-
 /src/client
