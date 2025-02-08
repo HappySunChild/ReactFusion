@@ -94,7 +94,7 @@ local Types = {
 }
 
 function Types.of(value)
-	local vType = type(value)
+	local vType = typeof(value)
 	
 	if vType == 'table' then
 		if value[Symbols.Type] then
