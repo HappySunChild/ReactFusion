@@ -1,13 +1,9 @@
 local Symbols = require(script.Parent.Symbols)
 local Types = require(script.Parent.Types)
 
-type element = Types.Element
-type component = Types.ElementComponent
-type props = Types.ElementProps
-
 local Children = Symbols.Children
 
-local function createElement(component: component, props: props?, children: {element}?): element
+local function createElement(component: Types.Component, props: Types.Properties?, children: {Types.Element}?): Types.Element
 	if props == nil then
 		props = {}
 	end
@@ -16,12 +12,12 @@ local function createElement(component: component, props: props?, children: {ele
 		props[Children] = children
 	end
 	
-	local newElement = {
+	local newElement = table.freeze({
 		[Symbols.Type] = Types.Element,
 		
 		component = component,
 		props = props
-	}
+	})
 	
 	return newElement
 end

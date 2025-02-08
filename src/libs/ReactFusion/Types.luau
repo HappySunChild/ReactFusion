@@ -1,5 +1,8 @@
+
+export type Disconnect = () -> nil
+
 export type StateObject<V> = {
-	onChange: (StateObject<V>, callback: (new: V, old: V) -> nil) -> () -> nil
+	onChange: (StateObject<V>, callback: (new: V, old: V) -> nil) -> Disconnect
 }
 
 export type Use = <V>(target: StateObject<V>) -> V 
@@ -15,15 +18,16 @@ export type Value<V> = StateObject<V> & {
 	update: (Value<V>, predicate: (V) -> V) -> V,
 	map: <T>(Value<V>, processor: (V) -> T) -> Computed<T, T>,
 	
-	tween: (Value<V>, target: V, info: TweenInfo, completedCallback: () -> nil?) -> () -> nil,
+	tween: (Value<V>, target: V, info: TweenInfo, completedCallback: (() -> nil)?) -> Disconnect,
+	bindToInstanceProperty: (Value<V>, instance: Instance, property: string) -> (Disconnect, RBXScriptConnection)
 }
 
-export type ElementProps = {any}
-export type ElementComponent = StatefulComponent | Instance | string | (props: ElementProps, children: {Element}) -> Element
+export type Properties = {any}
+export type Component = StatefulComponent | Instance | string | (props: Properties, children: {Element}) -> Element
 
 export type Element = {
-	component: ElementComponent,
-	props: ElementProps
+	component: Component,
+	props: Properties
 }
 
 export type Ref = {
@@ -52,13 +56,13 @@ export type VirtualNode = {
 }
 
 export type StatefulComponent = {
-	props: ElementProps,
+	props: Properties,
 	state: {any},
 	
 	setState: (StatefulComponent, newState: any) -> nil,
 	
 	render: (StatefulComponent) -> Element,
-	init: (StatefulComponent, initProps: ElementProps) -> nil,
+	init: (StatefulComponent, initProps: Properties) -> nil,
 	
 	didUpdate: (StatefulComponent) -> nil,
 	didMount: (StatefulComponent) -> nil,

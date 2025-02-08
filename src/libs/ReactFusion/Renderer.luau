@@ -4,10 +4,10 @@ local Symbols = require(package.Symbols)
 local Types = require(package.Types)
 
 local createElement = require(package.createElement)
-local getElementKind = require(package.getElementKind)
+local getElementKind = require(package.Utility.getElementKind)
 local defaultProperties = require(package.Instance.defaultProperties)
 local applyProperties = require(package.Instance.applyProperties)
-local assign = require(package.assign)
+local assign = require(package.Utility.assign)
 
 local ComponentLifecyclePhase = require(package.ComponentLifecyclePhase)
 
@@ -341,7 +341,7 @@ function Renderer.unmount(virtualNode: Types.VirtualNode)
 	end
 end
 
-function Renderer.hydrate(target: Instance, props: Types.ElementProps, children: {Types.Element}?)
+function Renderer.hydrate(target: Instance, props: Types.Properties, children: {Types.Element}?)
 	local element = createElement(target, props, children)
 	
 	return Renderer.mount(element)
