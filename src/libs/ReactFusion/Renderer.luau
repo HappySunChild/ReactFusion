@@ -277,12 +277,11 @@ function Renderer.mount(element: Types.Element, hostParent: Instance?, key: stri
 		key = 'NodeTree'
 	end
 	
-	local kind = getElementKind(element)
-	
 	local component = element.component
 	local props = element.props
+	local kind = getElementKind(element)
 	
-	if props[Redirect] then
+	if props and props[Redirect] then
 		hostParent = props[Redirect]
 	end
 	
