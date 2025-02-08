@@ -37,13 +37,15 @@ function ValueClass:onChange(callback)
 	return self[Signal]:connect(callback)
 end
 
-function ValueClass:set(newValue)
+function ValueClass:set(newValue: any)
 	local signal = self[Signal]
 	local oldValue = self[Internal]
 	
 	self[Internal] = newValue
 	
+	if oldValue ~= newValue then
 	signal:fire(newValue, oldValue)
+	end
 	
 	return newValue
 end
