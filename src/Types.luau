@@ -1,4 +1,7 @@
-export type Disconnect = () -> nil
+export type UsedAs<V> = StateObject<V> | V
+
+export type NullFunc = () -> nil
+export type Disconnect = NullFunc
 
 export type StateObject<V> = {
 	onChange: (StateObject<V>, callback: (new: V, old: V) -> nil) -> Disconnect,
@@ -17,7 +20,7 @@ export type Value<V> = StateObject<V> & {
 	update: (Value<V>, predicate: (V) -> V) -> V,
 	map: <T>(Value<V>, processor: (V) -> T) -> Computed<T, T>,
 
-	tween: (Value<V>, target: V, info: TweenInfo, completedCallback: (() -> nil)?) -> Disconnect,
+	tween: (Value<V>, target: UsedAs<V>, info: UsedAs<TweenInfo>, completedCallback: NullFunc?) -> Disconnect,
 	bindToInstanceProperty: (Value<V>, instance: Instance, property: string) -> (Disconnect, RBXScriptConnection),
 }
 
