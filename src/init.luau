@@ -1,7 +1,7 @@
 local Symbols = require(script.Symbols)
 local Renderer = require(script.Renderer)
 
-return {
+return table.freeze({
 	Children = Symbols.Children,
 	Redirect = Symbols.Redirect,
 	Ref = Symbols.Ref,
@@ -23,4 +23,6 @@ return {
 
 	reconcile = Renderer.reconcile,
 	hydrate = Renderer.hydrate,
-}
+
+	Clock = require(script.State.Clock),
+})
