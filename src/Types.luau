@@ -92,6 +92,7 @@ local Types = {
 	Fragment = createType('Fragment'),
 	StatefulComponent = createType('Stateful'),
 
+	Tween = createType('Tween'),
 	Value = createType('Value'),
 	Computed = createType('Computed'),
 }

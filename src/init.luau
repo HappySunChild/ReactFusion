@@ -9,6 +9,7 @@ return table.freeze({
 
 	None = Symbols.None,
 
+	createTween = require(script.Animation.createTween),
 	createComputed = require(script.State.createComputed),
 	createValue = require(script.State.createValue),
 	peek = require(script.State.peek),

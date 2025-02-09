@@ -57,12 +57,17 @@ function ValueClass:update(predicate)
 	return self:set(predicate(currentValue))
 end
 
+--- Tweens the value smoothly to the target value.
+--- This function is useful for when you need to tween a value once.
+---
+--- Cancels any active tweens.
 function ValueClass:tween(targetValue: Types.UsedAs<any>, info: Types.UsedAs<TweenInfo>, completedCallback: () -> nil)
 	info = peek(info)
 	targetValue = peek(targetValue)
 
 	if self[Tween] then
 		self[Tween]()
+		self[Tween] = nil
 	end
 
 	local startValue = self[Internal]
@@ -83,6 +88,7 @@ function ValueClass:tween(targetValue: Types.UsedAs<any>, info: Types.UsedAs<Twe
 		self:set(newValue)
 
 		if elapsed >= duration then
+			self[Tween] = nil
 			disconnect()
 
 			if completedCallback then
