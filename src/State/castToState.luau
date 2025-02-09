@@ -1,11 +1,12 @@
-local Symbols = require(script.Parent.Parent.Symbols)
-local Types = require(script.Parent.Parent.Types)
+local package = script.Parent.Parent
+
+local Kinds = require(package.Kinds)
 
 local function castToState(target)
-	if Types.kindOf(target) == Symbols.State then
+	if Kinds.of(target) == Kinds.State then
 		return target
 	end
-	
+
 	return nil
 end
 

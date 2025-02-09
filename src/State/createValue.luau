@@ -2,6 +2,7 @@ local package = script.Parent.Parent
 
 local Symbols = require(package.Symbols)
 local Types = require(package.Types)
+local Kinds = require(package.Kinds)
 local External = require(package.External)
 
 local Tween = Symbols.named('Tween')
@@ -18,7 +19,7 @@ local isSimilar = require(package.Utility.isSimilar)
 local peek = require(script.Parent.peek)
 
 local ValueClass = {
-	[Symbols.Kind] = Symbols.State,
+	[Symbols.Kind] = Kinds.State,
 	[Symbols.Type] = Types.Value,
 }
 

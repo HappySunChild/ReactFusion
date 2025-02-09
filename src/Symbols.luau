@@ -15,24 +15,13 @@ local Symbols = {
 
 	Type = named('Type'),
 	Kind = named('Kind'),
-
 	Internal = named('Internal'),
-
 	Children = named('Children'),
 	Signal = named('Signal'),
 	Ref = named('Ref'),
 	Redirect = named('Redirect'),
 
 	UseParentKey = named('UseParentKey'),
-
-	-- kinds
-	Host = named('Host'),
-	Function = named('Function'),
-	Fragment = named('Fragment'),
-	Hydration = named('Hydration'),
-	Stateful = named('Stateful'),
-
-	State = named('State'),
 }
 
 return Symbols

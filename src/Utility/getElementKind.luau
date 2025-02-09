@@ -1,20 +1,20 @@
 local package = script.Parent.Parent
 
-local Symbols = require(package.Symbols)
+local Kinds = require(package.Kinds)
 local Types = require(package.Types)
 
-return function (element)
+return function(element)
 	local compType = Types.of(element.component)
-	
+
 	if compType == 'string' then
-		return Symbols.Host
+		return Kinds.Host
 	elseif compType == 'function' then
-		return Symbols.Function
+		return Kinds.Function
 	elseif compType == 'Instance' then
-		return Symbols.Hydration
+		return Kinds.Hydration
 	elseif compType == Types.StatefulComponent then
-		return Symbols.Stateful
+		return Kinds.Stateful
 	elseif Types.of(element) == Types.Fragment then
-		return Symbols.Fragment
+		return Kinds.Fragment
 	end
 end

@@ -109,16 +109,4 @@ function Types.of(value)
 	return vType
 end
 
-function Types.kindOf(value)
-	local vType = type(value)
-
-	if vType == 'table' then
-		if value[Symbols.Kind] then
-			return value[Symbols.Kind]
-		end
-	end
-
-	return vType
-end
-
 return Types

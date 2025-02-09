@@ -1,13 +1,14 @@
 local package = script.Parent
 
+local Kinds = require(package.Kinds)
 local Symbols = require(package.Symbols)
 local Types = require(package.Types)
 
-local createElement = require(package.Graph.createElement)
-local getElementKind = require(package.Utility.getElementKind)
-local defaultProperties = require(package.Instance.defaultProperties)
 local applyProperties = require(package.Instance.applyProperties)
 local assign = require(package.Utility.assign)
+local createElement = require(package.Graph.createElement)
+local defaultProperties = require(package.Instance.defaultProperties)
+local getElementKind = require(package.Utility.getElementKind)
 
 local ComponentLifecyclePhase = require(package.Graph.ComponentLifecyclePhase)
 
@@ -114,7 +115,7 @@ function Renderer.updateNode(virtualNode: Types.VirtualNode, newElement: Types.E
 
 	local kind = getElementKind(newElement)
 
-	if kind == Symbols.Host or kind == Symbols.Hydration then
+	if kind == Kinds.Host or kind == Kinds.Hydration then
 		local props = newElement.props
 
 		if virtualNode.hostInstance then
@@ -126,7 +127,7 @@ function Renderer.updateNode(virtualNode: Types.VirtualNode, newElement: Types.E
 		if children then
 			Renderer.updateNodeChildren(virtualNode, virtualNode.hostInstance, children)
 		end
-	elseif kind == Symbols.Fragment then
+	elseif kind == Kinds.Fragment then
 		Renderer.updateNodeChildren(virtualNode, virtualNode.hostParent, newElement.elements)
 	end
 
@@ -296,17 +297,17 @@ function Renderer.mount(element: Types.Element, hostParent: Instance?, key: stri
 
 	local virtualNode = createVirtualNode(element, hostParent, key)
 
-	if kind == Symbols.Host then
+	if kind == Kinds.Host then
 		mountHostNode(virtualNode)
-	elseif kind == Symbols.Hydration then
+	elseif kind == Kinds.Hydration then
 		mountHydrateNode(virtualNode)
-	elseif kind == Symbols.Function then
+	elseif kind == Kinds.Function then
 		local result = component(props, props[Children])
 
 		Renderer.updateNodeChildren(virtualNode, hostParent, result)
-	elseif kind == Symbols.Fragment then
+	elseif kind == Kinds.Fragment then
 		Renderer.updateNodeChildren(virtualNode, hostParent, element.elements)
-	elseif kind == Symbols.Stateful then
+	elseif kind == Kinds.Stateful then
 		mountStatefulNode(virtualNode)
 	else
 		error(`Invalid element component, {typeof(component)} '{component}' Kind {kind}`, 2)

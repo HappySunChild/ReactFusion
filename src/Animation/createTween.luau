@@ -1,8 +1,9 @@
 local package = script.Parent.Parent
 
+local External = require(package.External)
+local Kinds = require(package.Kinds)
 local Symbols = require(package.Symbols)
 local Types = require(package.Types)
-local External = require(package.External)
 
 local getTweenAlpha = require(script.Parent.getTweenAlpha)
 local getTweenDuration = require(script.Parent.getTweenDuration)
@@ -21,7 +22,7 @@ local ActiveLoop = Symbols.named('ActiveLoop')
 
 local TweenClass = {
 	[Symbols.Type] = Types.Tween,
-	[Symbols.Kind] = Symbols.State,
+	[Symbols.Kind] = Kinds.State,
 }
 
 local METATABLE = table.freeze({ __index = TweenClass })
