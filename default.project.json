@@ -6,7 +6,11 @@
 		"ReplicatedStorage": {
 			"$ignoreUnknownInstances": true,
 			"Libraries": {
-				"$path": "src/libs"
+				"$className": "Folder",
+				"$ignoreUnknownInstances": true,
+				"ReactFusion": {
+					"$path": "src"
+				}
 			}
 		},
 
@@ -14,8 +18,8 @@
 			"StarterPlayerScripts": {
 				"$ignoreUnknownInstances": true,
 				
-				"Tests": {
-					"$path": "src/client"
+				"Demos": {
+					"$path": "demos"
 				}
 			}
 		}
