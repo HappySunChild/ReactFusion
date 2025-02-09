@@ -26,45 +26,115 @@ local keys = {
 }
 
 local items = {}
-local current = nil
+local currentTool = nil
 
-local function characterAdded(character: Model)
-	character.ChildAdded:Connect(function(child)
-		if child:IsA('Tool') then
-			current = child
-		end
-	end)
+local updateSignal = Rusion.createSignal()
 
-	character.ChildRemoved:Connect(function(child)
-		if child == current then
-			current = nil
+-- utility functions
+
+local function find(tab, value)
+	for k, v in tab do
+		if v == value then
+			return k
 		end
-	end)
+	end
 end
 
+local function getLowestAvailableIndex(tab)
+	local index = 1
+
+	while tab[index] do
+		index += 1
+	end
+
+	return index
+end
+
+-- backpack functions
+
 local function equipTool(index: number)
-	local tool = items[index]
+	local selectedTool = items[index]
 
-	if not tool then
+	if not selectedTool then
 		return
 	end
 
-	if current == tool then
-		current.Parent = player.Backpack
+	if currentTool and currentTool:IsDescendantOf(workspace) then
+		local curTool = currentTool -- this is gross but it works
 
+		currentTool.Parent = player.Backpack
+
+		if selectedTool == curTool then
+			return
+		end
+	end
+
+	selectedTool.Parent = player.Character
+end
+
+local function removeTool(tool: Tool)
+	local index = find(items, tool)
+
+	if index then
+		items[index] = nil
+
+		updateSignal:fire()
+	end
+end
+
+local function addTool(child: Instance)
+	if not child:IsA('Tool') then
 		return
 	end
 
-	if current then
-		current.Parent = player.Backpack
+	if find(items, child) then
+		return
 	end
 
-	tool.Parent = player.Character
+	local connection
+	connection = child.AncestryChanged:Connect(function(_, parent)
+		if parent == nil or parent ~= player.Backpack and parent ~= player.Character then
+			connection:Disconnect()
+
+			removeTool(child)
+		end
+	end)
+
+	items[getLowestAvailableIndex(items)] = child
+
+	updateSignal:fire()
+end
+
+-- event functions
+
+local function characterAdded(character: Model)
+	local backpack = player:WaitForChild('Backpack')
+
+	backpack.ChildAdded:Connect(addTool)
+
+	for _, child in backpack:GetChildren() do
+		addTool(child)
+	end
+
+	character.ChildAdded:Connect(function(child)
+		addTool(child)
+
+		if child:IsA('Tool') then
+			currentTool = child
+		end
+	end)
+	character.ChildRemoved:Connect(function(child)
+		if child == currentTool then
+			currentTool = nil
+		end
+	end)
 end
 
 Rusion.mount(
 	Element('ScreenGui', nil, {
 		Hotbar = Element(HotbarComponent, {
+			UpdateSignal = updateSignal,
+
 			Height = 50,
 			Padding = 5,
 

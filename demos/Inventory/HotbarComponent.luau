@@ -2,14 +2,13 @@ local Players = game:GetService('Players')
 local ReplicatedStorage = game:GetService('ReplicatedStorage')
 local TextService = game:GetService('TextService')
 
-local player = Players.LocalPlayer
-player.CharacterAdded:Wait()
-
-local backpack = player:WaitForChild('Backpack')
-
 local Rusion = require(ReplicatedStorage.Libraries.ReactFusion)
 local Element = Rusion.createElement
 local Value = Rusion.createValue
+
+local Foreground = Color3.fromRGB(245, 247, 234)
+local ActiveForeground = Color3.fromRGB(225, 86, 63)
+local Background = Color3.fromRGB(45, 48, 50)
 
 local HoverInfo = TweenInfo.new(0.4, Enum.EasingStyle.Circular)
 local TooltipInfo = TweenInfo.new(0.2, Enum.EasingStyle.Exponential)
@@ -19,7 +18,21 @@ local function HotbarSlot(props)
 	local index = props.Index
 	local callback = props.Callback
 
-	local bounds = TextService:GetTextSize(tool.ToolTip, 14, Enum.Font.SourceSans, Vector2.new(math.huge, 15))
+	local displayName = Value(tool.Name)
+	displayName:bindToInstanceProperty(tool, 'Name')
+
+	local tooltip = Value(tool.ToolTip)
+	tooltip:bindToInstanceProperty(tool, 'ToolTip')
+
+	local tooltipTargetWidth = tooltip:map(function(text)
+		if text == '' then
+			return 0
+		end
+
+		local bounds = TextService:GetTextSize(text, 14, Enum.Font.SourceSans, Vector2.new(math.huge, 15))
+
+		return bounds.X + 4
+	end)
 
 	local tooltipWidth = Value(0)
 	local slotSize = Value(1)
@@ -27,30 +40,23 @@ local function HotbarSlot(props)
 	local toolParent = Value(tool.Parent)
 	toolParent:bindToInstanceProperty(tool, 'Parent')
 
+	local currentBackpack = Players.LocalPlayer.Backpack
+
 	return Element('TextButton', {
-		Size = slotSize:map(function(v)
-			return UDim2.fromScale(v, v)
+		Size = slotSize:map(function(size)
+			return UDim2.fromScale(size, size)
 		end),
 		SizeConstraint = Enum.SizeConstraint.RelativeYY,
 
 		LayoutOrder = index,
 
-		BorderSizePixel = 1,
-		BorderColor3 = toolParent:map(function(parent)
-			if parent == backpack then
-				return Color3.new(1, 1, 1)
-			end
-
-			return Color3.fromRGB(93, 85, 255)
-		end),
-
-		BackgroundColor3 = Color3.fromRGB(28, 32, 47),
+		BackgroundColor3 = Background,
 		BackgroundTransparency = 0.4,
 
-		Text = tool.Name,
+		Text = displayName,
 		TextWrapped = true,
 		TextTruncate = Enum.TextTruncate.AtEnd,
-		TextColor3 = Color3.new(1, 1, 1),
+		TextColor3 = Foreground,
 
 		[Rusion.Event.Activated] = function(_, input: InputObject)
 			if input.UserInputType == Enum.UserInputType.MouseButton1 then
@@ -61,36 +67,51 @@ local function HotbarSlot(props)
 		end,
 		[Rusion.Event.MouseEnter] = function()
 			slotSize:tween(1.1, HoverInfo)
-			tooltipWidth:tween(bounds.X + 4, TooltipInfo)
+			tooltipWidth:tween(tooltipTargetWidth, TooltipInfo)
 		end,
 		[Rusion.Event.MouseLeave] = function()
 			slotSize:tween(1, HoverInfo)
 			tooltipWidth:tween(0, TooltipInfo)
 		end,
 	}, {
-		Tooltip = Element('TextLabel', {
+		Stroke = Element('UIStroke', {
+			ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+			Thickness = 1,
+			Color = toolParent:map(function(parent)
+				if parent == currentBackpack then
+					return Foreground
+				end
+
+				return ActiveForeground
+			end),
+		}),
+		Round = Element('UICorner', {
+			CornerRadius = UDim.new(0, 2),
+		}),
+
+		ToolTip = Element('TextLabel', {
 			AnchorPoint = Vector2.new(0.5, 1),
 			Position = UDim2.new(0.5, 0, 0, -5),
 			Size = tooltipWidth:map(function(width)
 				return UDim2.fromOffset(width, 16)
 			end),
 
-			Text = tool.ToolTip,
+			Text = tooltip,
 			TextXAlignment = Enum.TextXAlignment.Center,
 			TextYAlignment = Enum.TextYAlignment.Center,
-			TextColor3 = Color3.new(1, 1, 1),
+			TextColor3 = Foreground,
 
 			ClipsDescendants = true,
 
 			BackgroundTransparency = 0.5,
-			BackgroundColor3 = Color3.fromRGB(53, 52, 78),
+			BackgroundColor3 = Background,
 		}),
-		SlotIndex = Element('TextLabel', {
+		IndexLabel = Element('TextLabel', {
 			Size = UDim2.fromOffset(10, 10),
 			BackgroundTransparency = 1,
 
-			Text = index,
-			TextColor3 = Color3.new(1, 1, 1),
+			Text = tostring(index % 10),
+			TextColor3 = Foreground,
 		}),
 	})
 end
@@ -98,54 +119,18 @@ end
 local HotbarComponent = Rusion.createComponent('Hotbar')
 
 function HotbarComponent:init(props)
-	local items = props.Items or {}
+	local items = props.Items
+	local updateSignal = props.UpdateSignal
 
-	local function update()
+	updateSignal:connect(function()
 		self:setState({
 			Items = items,
 		})
-	end
+	end)
 
-	local function removeTool(tool: Tool)
-		local index = table.find(items, tool)
-
-		if index then
-			items[index] = nil
-
-			update()
-		end
-	end
-
-	local function addTool(child: Instance)
-		if not child:IsA('Tool') then
-			return
-		end
-
-		if table.find(items, child) then
-			return
-		end
-
-		local connection
-		connection = child.AncestryChanged:Connect(function(_, parent)
-			if parent ~= backpack and parent ~= player.Character or parent == nil then
-				connection:Disconnect()
-
-				removeTool(child)
-			end
-		end)
-
-		table.insert(items, child)
-		update()
-	end
-
-	player.Character.ChildAdded:Connect(addTool)
-	backpack.ChildAdded:Connect(addTool)
-
-	for _, child in backpack:GetChildren() do
-		addTool(child)
-	end
-
-	update()
+	self:setState({
+		Items = items,
+	})
 end
 
 function HotbarComponent:render()
@@ -156,7 +141,7 @@ function HotbarComponent:render()
 	local slots = {}
 
 	for index, tool: Tool in items do
-		table.insert(slots, Element(HotbarSlot, { Item = tool, Index = index, Callback = props.EquipCallback }))
+		slots[index] = Element(HotbarSlot, { Item = tool, Index = index, Callback = props.EquipCallback })
 	end
 
 	local height = props.Height
