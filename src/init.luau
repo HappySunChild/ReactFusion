@@ -18,6 +18,8 @@ return table.freeze({
 	createElement = require(script.Graph.createElement),
 	createComponent = require(script.Graph.createComponent),
 
+	createSignal = require(script.Graph.createSignal),
+
 	mount = Renderer.mount,
 	unmount = Renderer.unmount,
 
