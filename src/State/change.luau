@@ -40,7 +40,7 @@ local function change(target)
 	until done
 
 	table.sort(userList, function(a, b)
-		return a[Symbols.CreatedAt] > b[Symbols.CreatedAt]
+		return a[Symbols.CreatedAt] < b[Symbols.CreatedAt]
 	end)
 
 	for _, user in userList do
