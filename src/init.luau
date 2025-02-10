@@ -1,5 +1,5 @@
-local Symbols = require(script.Symbols)
 local Renderer = require(script.Renderer)
+local Symbols = require(script.Symbols)
 
 return table.freeze({
 	Children = Symbols.Children,
@@ -19,7 +19,8 @@ return table.freeze({
 	createElement = require(script.Graph.createElement),
 	createComponent = require(script.Graph.createComponent),
 
-	createSignal = require(script.Graph.createSignal),
+	createObserver = require(script.Graph.createObserver),
+	createSignal = require(script.Utility.createSignal),
 
 	mount = Renderer.mount,
 	unmount = Renderer.unmount,
@@ -27,5 +28,5 @@ return table.freeze({
 	reconcile = Renderer.reconcile,
 	hydrate = Renderer.hydrate,
 
-	Clock = require(script.State.Clock),
+	Clock = require(script.Utility.Clock),
 })
