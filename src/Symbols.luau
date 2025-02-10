@@ -10,6 +10,7 @@ end
 
 local Symbols = {
 	named = named,
+	DebugId = named('DebugId'),
 
 	None = named('None'),
 
@@ -22,6 +23,12 @@ local Symbols = {
 	Redirect = named('Redirect'),
 
 	UseParentKey = named('UseParentKey'),
+
+	Validity = named('Validity'),
+	LastChange = named('LastChange'),
+	CreatedAt = named('CreatedAt'),
+	Users = named('Users'),
+	Using = named('Using'),
 }
 
 return Symbols

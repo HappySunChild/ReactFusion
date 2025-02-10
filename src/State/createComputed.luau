@@ -1,14 +1,18 @@
 local package = script.Parent.Parent
 
+local Kinds = require(package.Kinds)
 local Symbols = require(package.Symbols)
 local Types = require(package.Types)
-local Kinds = require(package.Kinds)
 
+local createObserver = require(package.Graph.createObserver)
 local isSimilar = require(package.Utility.isSimilar)
-local createSignal = require(package.Graph.createSignal)
+
 local castToState = require(script.Parent.castToState)
-local evaluate = require(script.Parent.evaluate)
+local depend = require(package.Graph.depend)
+local evaluate = require(package.Graph.evaluate)
 local peek = require(script.Parent.peek)
+
+local Processor = Symbols.named('Processor')
 
 local ComputedClass = {
 	[Symbols.Kind] = Kinds.State,
@@ -17,12 +21,16 @@ local ComputedClass = {
 
 local METATABLE = table.freeze({ __index = ComputedClass })
 
-local function createComputed<V, T>(processor: Types.ComputedProcessor<T>): Types.Computed<V, T>
+local function createComputed<V, T>(processor: Types.ComputedProcessor<T>, debugId): Types.Computed<V, T>
 	local newComputed = setmetatable({
-		[Symbols.Signal] = createSignal(),
+		[Symbols.CreatedAt] = os.clock(),
 		[Symbols.Internal] = nil,
-		_using = {},
-		_processor = processor,
+		[Symbols.DebugId] = debugId,
+
+		[Symbols.Using] = {},
+		[Symbols.Users] = {},
+
+		[Processor] = processor,
 	}, METATABLE)
 
 	evaluate(newComputed, true)
@@ -31,28 +39,36 @@ local function createComputed<V, T>(processor: Types.ComputedProcessor<T>): Type
 end
 
 function ComputedClass:onChange(callback)
-	return self[Symbols.Signal]:connect(callback)
+	local observer = createObserver(self)
+
+	return observer:onChange(callback), observer
+end
+
+function ComputedClass:map(processor)
+	return createComputed(function(use)
+		return processor(use(self))
+	end, `Computed({self[Symbols.DebugId]})`)
 end
 
 function ComputedClass:_evaluate()
 	local function use(target)
-		if castToState(target) and not self._using[target] then
-			self._using[target] = target:onChange(function()
-				evaluate(self, true)
-			end)
+		if castToState(target) then
+			depend(self, target)
 		end
 
 		return peek(target)
 	end
 
-	local newValue = self._processor(use)
+	local newValue = self[Processor](use)
 	local oldValue = self[Symbols.Internal]
 
 	self[Symbols.Internal] = newValue
 
 	if not isSimilar(newValue, oldValue) then
-		self[Symbols.Signal]:fire(newValue, oldValue)
+		return true
 	end
+
+	return false
 end
 
 table.freeze(ComputedClass)

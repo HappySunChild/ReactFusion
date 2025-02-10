@@ -1,18 +1,21 @@
-export type UsedAs<V> = StateObject<V> | V
-
 export type NullFunc = () -> nil
 export type Disconnect = NullFunc
 
-export type StateObject<V> = {
-	onChange: (StateObject<V>, callback: (new: V, old: V) -> nil) -> Disconnect,
+export type Observer<V> = {
+	onChange: (callback: (new: V) -> nil) -> Disconnect,
 }
+
+export type StateObject<V> = {
+	onChange: (StateObject<V>, callback: (new: V) -> nil) -> (Disconnect, Observer<V>),
+}
+
+export type UsedAs<V> = StateObject<V> | V
 
 export type Use = <V>(target: StateObject<V>) -> V
 export type ComputedProcessor<T> = (Use) -> T
 
 export type Computed<V, T> = StateObject<T> & {
-	_using: { StateObject<any> },
-	_processor: ComputedProcessor<T>,
+	map: <T>(Value<V>, processor: (V) -> T) -> Computed<T, T>,
 }
 
 export type Value<V> = StateObject<V> & {
@@ -92,9 +95,14 @@ local Types = {
 	Fragment = createType('Fragment'),
 	StatefulComponent = createType('Stateful'),
 
+	Stopwatch = createType('Stopwatch'),
+
 	Tween = createType('Tween'),
 	Value = createType('Value'),
 	Computed = createType('Computed'),
+
+	Observer = createType('Observer'),
+	Signal = createType('Signal'),
 }
 
 function Types.of(value)

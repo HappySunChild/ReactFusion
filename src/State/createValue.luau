@@ -1,34 +1,40 @@
 local package = script.Parent.Parent
 
+local External = require(package.External)
+local Kinds = require(package.Kinds)
 local Symbols = require(package.Symbols)
 local Types = require(package.Types)
-local Kinds = require(package.Kinds)
-local External = require(package.External)
 
-local Tween = Symbols.named('Tween')
-local Signal = Symbols.Signal
-local Internal = Symbols.Internal
-
-local getTweenDuration = require(package.Animation.getTweenDuration)
 local getTweenAlpha = require(package.Animation.getTweenAlpha)
+local getTweenDuration = require(package.Animation.getTweenDuration)
 local lerp = require(package.Animation.lerp)
 
-local createSignal = require(package.Graph.createSignal)
 local createComputed = require(script.Parent.createComputed)
+local createObserver = require(package.Graph.createObserver)
 local isSimilar = require(package.Utility.isSimilar)
+
+local change = require(script.Parent.change)
 local peek = require(script.Parent.peek)
+
+local Tween = Symbols.named('Tween')
 
 local ValueClass = {
 	[Symbols.Kind] = Kinds.State,
 	[Symbols.Type] = Types.Value,
+	[Symbols.Using] = table.freeze({}),
 }
 
 local METATABLE = table.freeze({ __index = ValueClass })
 
-local function createValue<V>(initialValue: V): Types.Value<V>
+local function createValue<V>(initialValue: V, debugId): Types.Value<V>
 	local newValue = setmetatable({
-		[Internal] = initialValue,
-		[Signal] = createSignal(),
+		[Symbols.CreatedAt] = os.clock(),
+
+		[Symbols.Internal] = initialValue,
+		[Symbols.DebugId] = debugId,
+
+		[Symbols.Users] = {},
+
 		[Tween] = nil,
 	}, METATABLE)
 
@@ -36,24 +42,25 @@ local function createValue<V>(initialValue: V): Types.Value<V>
 end
 
 function ValueClass:onChange(callback)
-	return self[Signal]:connect(callback)
+	local observer = createObserver(self)
+
+	return observer:onChange(callback), observer
 end
 
 function ValueClass:set(newValue: any)
-	local signal = self[Signal]
-	local oldValue = self[Internal]
+	local currentValue = self[Symbols.Internal]
 
-	self[Internal] = newValue
+	self[Symbols.Internal] = newValue
 
-	if not isSimilar(newValue, oldValue) then
-		signal:fire(newValue, oldValue)
+	if not isSimilar(newValue, currentValue) then
+		change(self, currentValue)
 	end
 
 	return newValue
 end
 
 function ValueClass:update(predicate)
-	local currentValue = self[Internal]
+	local currentValue = self[Symbols.Internal]
 
 	return self:set(predicate(currentValue))
 end
@@ -71,7 +78,7 @@ function ValueClass:tween(targetValue: Types.UsedAs<any>, info: Types.UsedAs<Twe
 		self[Tween] = nil
 	end
 
-	local startValue = self[Internal]
+	local startValue = self[Symbols.Internal]
 
 	if targetValue == startValue then
 		return
@@ -103,10 +110,10 @@ function ValueClass:tween(targetValue: Types.UsedAs<any>, info: Types.UsedAs<Twe
 	return cancel
 end
 
-function ValueClass:map(callback)
+function ValueClass:map(processor)
 	return createComputed(function(use)
-		return callback(use(self))
-	end)
+		return processor(use(self))
+	end, `Computed({self[Symbols.DebugId]})`)
 end
 
 function ValueClass:bindToInstanceProperty(instance: Instance, property: string)
@@ -127,6 +134,10 @@ function ValueClass:bindToInstanceProperty(instance: Instance, property: string)
 	return function()
 		connection:Disconnect()
 	end, connection
+end
+
+function ValueClass:_evaluate()
+	return true
 end
 
 table.freeze(ValueClass)

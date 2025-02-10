@@ -1,11 +1,19 @@
-local SignalClass = {}
-local METATABLE = table.freeze({__index = SignalClass})
+local package = script.Parent.Parent
+
+local Symbols = require(package.Symbols)
+local Types = require(package.Types)
+
+local SignalClass = {
+	[Symbols.Type] = Types.Signal,
+}
+
+local METATABLE = table.freeze({ __index = SignalClass })
 
 local function createSignal()
 	local signal = setmetatable({
-		subscriptions = {}
+		subscriptions = {},
 	}, METATABLE)
-	
+
 	return signal
 end
 
@@ -17,10 +25,10 @@ end
 
 function SignalClass:connect(callback)
 	self.subscriptions[callback] = true
-	
-	return function ()
+
+	return function()
 		self.subscriptions[callback] = nil
 	end
 end
 
-return createSignal 
+return createSignal
