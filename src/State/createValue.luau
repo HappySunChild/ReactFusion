@@ -53,7 +53,7 @@ function ValueClass:set(newValue: any)
 	self[Symbols.Internal] = newValue
 
 	if not isSimilar(newValue, currentValue) then
-		change(self, currentValue)
+		change(self)
 	end
 
 	return newValue
