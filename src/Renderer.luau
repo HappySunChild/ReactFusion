@@ -6,11 +6,10 @@ local Types = require(package.Types)
 
 local applyProperties = require(package.Instance.applyProperties)
 local assign = require(package.Utility.assign)
-local createElement = require(package.Graph.createElement)
 local defaultProperties = require(package.Instance.defaultProperties)
 local getElementKind = require(package.Utility.getElementKind)
 
-local ComponentLifecyclePhase = require(package.Graph.ComponentLifecyclePhase)
+local ComponentLifecyclePhase = require(package.Node.ComponentLifecyclePhase)
 
 local Internal = Symbols.Internal
 local Children = Symbols.Children
@@ -349,12 +348,6 @@ function Renderer.unmount(virtualNode: Types.VirtualNode)
 	for _, connection in virtualNode.connections do
 		connection:Disconnect()
 	end
-end
-
-function Renderer.hydrate(target: Instance, props: Types.Properties, children: { Types.Element }?)
-	local element = createElement(target, props, children)
-
-	return Renderer.mount(element)
 end
 
 function Renderer.reconcile(virtualNode: Types.VirtualNode, newElement: Types.Element?)
