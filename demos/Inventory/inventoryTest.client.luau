@@ -135,7 +135,7 @@ Rusion.mount(
 		Hotbar = Element(HotbarComponent, {
 			UpdateSignal = updateSignal,
 
-			Height = 60,
+			Height = 50,
 			Padding = 5,
 
 			Items = items,
