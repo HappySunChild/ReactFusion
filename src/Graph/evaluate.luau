@@ -2,15 +2,8 @@ local package = script.Parent.Parent
 
 local Symbols = require(package.Symbols)
 
-local level = require(package.Logging.level)
-local tagPrint = require(package.Logging.tagPrint)
-
 local function evaluate(target, forceComputation)
-	tagPrint('eval+1', target[Symbols.DebugId])
-
 	if target[Symbols.Validity] == 'busy' then
-		level.set(0)
-
 		return error('Evaluate target is already being evaluated, possible infinite loop!', 2)
 	end
 
@@ -50,12 +43,8 @@ local function evaluate(target, forceComputation)
 
 		target[Symbols.Validity] = 'valid'
 
-		tagPrint('eval end-1', target[Symbols.DebugId])
-
 		return targetMeaningfullyChanged
 	end
-
-	tagPrint('eval null end-1', target[Symbols.DebugId])
 
 	return false
 end

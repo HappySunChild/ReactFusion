@@ -4,15 +4,14 @@ local Symbols = require(package.Symbols)
 local castToState = require(script.Parent.castToState)
 local evaluate = require(package.Graph.evaluate)
 
-local level = require(package.Logging.level)
-local tagPrint = require(package.Logging.tagPrint)
-
 local function change(target)
 	if not castToState(target) then
 		return
 	end
 
-	tagPrint('change+1', target[Symbols.DebugId])
+	if not evaluate(target, true) then
+		return
+	end
 
 	target[Symbols.LastChange] = os.clock()
 
@@ -48,8 +47,6 @@ local function change(target)
 
 		evaluate(user, false)
 	end
-
-	level.increment(-1)
 end
 
 return change
