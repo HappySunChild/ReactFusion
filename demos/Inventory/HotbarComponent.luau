@@ -5,6 +5,7 @@ local TextService = game:GetService('TextService')
 local Rusion = require(ReplicatedStorage.Libraries.ReactFusion)
 local Element = Rusion.createElement
 local Value = Rusion.createValue
+local Computed = Rusion.createComputed
 
 local Foreground = Color3.fromRGB(245, 247, 234)
 local ActiveForeground = Color3.fromRGB(225, 86, 63)
@@ -18,27 +19,27 @@ local function HotbarSlot(props)
 	local index = props.Index
 	local callback = props.Callback
 
-	local displayName = Value(tool.Name)
-	displayName:bindToInstanceProperty(tool, 'Name')
+	local toolName = Value(tool.Name)
+	toolName:bindToInstanceProperty(tool, 'Name')
 
-	local tooltip = Value(tool.ToolTip)
-	tooltip:bindToInstanceProperty(tool, 'ToolTip')
+	local toolTip = Value(tool.ToolTip)
+	toolTip:bindToInstanceProperty(tool, 'ToolTip')
 
-	local tooltipTargetWidth = tooltip:map(function(text)
-		if text == '' then
+	local toolParent = Value(tool.Parent)
+	toolParent:bindToInstanceProperty(tool, 'Parent')
+
+	local isHovering = Value(false)
+	local toolTipWidth = Computed(function(use)
+		if not use(isHovering) then
 			return 0
 		end
 
-		local bounds = TextService:GetTextSize(text, 14, Enum.Font.SourceSans, Vector2.new(math.huge, 15))
+		local bounds = TextService:GetTextSize(use(toolTip), 14, Enum.Font.SourceSans, Vector2.new(math.huge, 16))
 
 		return bounds.X + 4
 	end)
 
-	local tooltipWidth = Value(0)
 	local slotSize = Value(1)
-
-	local toolParent = Value(tool.Parent)
-	toolParent:bindToInstanceProperty(tool, 'Parent')
 
 	local currentBackpack = Players.LocalPlayer.Backpack
 
@@ -53,7 +54,7 @@ local function HotbarSlot(props)
 		BackgroundColor3 = Background,
 		BackgroundTransparency = 0.4,
 
-		Text = displayName,
+		Text = toolName,
 		TextWrapped = true,
 		TextTruncate = Enum.TextTruncate.AtEnd,
 		TextColor3 = Foreground,
@@ -67,11 +68,11 @@ local function HotbarSlot(props)
 		end,
 		[Rusion.Event.MouseEnter] = function()
 			slotSize:tween(1.1, HoverInfo)
-			tooltipWidth:tween(tooltipTargetWidth, TooltipInfo)
+			isHovering:set(true)
 		end,
 		[Rusion.Event.MouseLeave] = function()
 			slotSize:tween(1, HoverInfo)
-			tooltipWidth:tween(0, TooltipInfo)
+			isHovering:set(false)
 		end,
 	}, {
 		Stroke = Element('UIStroke', {
@@ -92,11 +93,14 @@ local function HotbarSlot(props)
 		ToolTip = Element('TextLabel', {
 			AnchorPoint = Vector2.new(0.5, 1),
 			Position = UDim2.new(0.5, 0, 0, -5),
-			Size = tooltipWidth:map(function(width)
-				return UDim2.fromOffset(width, 16)
-			end),
+			Size = Rusion.createTween(
+				toolTipWidth:map(function(width)
+					return UDim2.fromOffset(width, 16)
+				end),
+				TooltipInfo
+			),
 
-			Text = tooltip,
+			Text = toolTip,
 			TextXAlignment = Enum.TextXAlignment.Center,
 			TextYAlignment = Enum.TextYAlignment.Center,
 			TextColor3 = Foreground,
@@ -151,7 +155,7 @@ function HotbarComponent:render()
 
 	return Element('Frame', {
 		AnchorPoint = Vector2.new(0.5, 1),
-		Position = UDim2.new(0.5, 0, 1, -10),
+		Position = UDim2.new(0.5, 0, 1, -5),
 		Size = UDim2.fromOffset(count * height + (count - 1) * padding, height),
 
 		BackgroundTransparency = 1,
