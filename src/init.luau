@@ -14,10 +14,10 @@ return table.freeze({
 	createValue = require(script.State.createValue),
 	peek = require(script.State.peek),
 
-	createRef = require(script.Graph.createRef),
-	createFragment = require(script.Graph.createFragment),
-	createElement = require(script.Graph.createElement),
-	createComponent = require(script.Graph.createComponent),
+	createRef = require(script.Node.createRef),
+	createFragment = require(script.Node.createFragment),
+	createElement = require(script.Node.createElement),
+	createComponent = require(script.Node.createComponent),
 
 	createObserver = require(script.Graph.createObserver),
 	createSignal = require(script.Utility.createSignal),
@@ -26,7 +26,7 @@ return table.freeze({
 	unmount = Renderer.unmount,
 
 	reconcile = Renderer.reconcile,
-	hydrate = Renderer.hydrate,
+	hydrate = require(script.Instance.hydrate),
 
 	Clock = require(script.Utility.Clock),
 })
