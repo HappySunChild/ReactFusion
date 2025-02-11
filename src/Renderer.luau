@@ -9,6 +9,9 @@ local assign = require(package.Utility.assign)
 local defaultProperties = require(package.Instance.defaultProperties)
 local getElementKind = require(package.Utility.getElementKind)
 
+local castToType = require(package.State.castToState)
+local peek = require(package.State.peek)
+
 local ComponentLifecyclePhase = require(package.Node.ComponentLifecyclePhase)
 
 local Internal = Symbols.Internal
@@ -176,6 +179,22 @@ function Renderer.updateNodeChildren(
 	end
 end
 
+local function setChildren(virtualNode: Types.VirtualNode, children: Types.UsedAs<{ Types.Element }>?)
+	if not children then
+		return
+	end
+
+	local hostInstance = virtualNode.hostInstance
+
+	Renderer.updateNodeChildren(virtualNode, hostInstance, peek(children))
+
+	if castToType(children) then
+		virtualNode.bindings[Children] = children:onChange(function(new)
+			Renderer.updateNodeChildren(virtualNode, hostInstance, new)
+		end)
+	end
+end
+
 local function mountHydrateNode(virtualNode: Types.VirtualNode)
 	local element = virtualNode.currentElement
 	local props = element.props
@@ -199,14 +218,7 @@ local function mountHydrateNode(virtualNode: Types.VirtualNode)
 	virtualNode.hostKey = hostInstance.Name
 
 	applyProperties(virtualNode, props)
-
-	-- another thing i'm thinking about it automatically translating all of the
-	-- children of the instance into virtual nodes, but i think that is also very unnecessary
-	local children = props[Children]
-
-	if children then
-		Renderer.updateNodeChildren(virtualNode, hostInstance, children)
-	end
+	setChildren(virtualNode, props[Children])
 
 	applyRef(props[Ref], hostInstance)
 end
@@ -234,12 +246,7 @@ local function mountHostNode(virtualNode: Types.VirtualNode)
 	end
 
 	applyProperties(virtualNode, props)
-
-	local children = props[Children]
-
-	if children then
-		Renderer.updateNodeChildren(virtualNode, hostInstance, children)
-	end
+	setChildren(virtualNode, props[Children])
 
 	hostInstance.Name = tostring(virtualNode.hostKey)
 	hostInstance.Parent = virtualNode.hostParent
